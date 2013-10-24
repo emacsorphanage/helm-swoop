@@ -6,7 +6,7 @@
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
-;; Keywords: helm whole line search
+;; Keywords: helm swoop inner buffer search
 ;; Package-Requires: ((helm "1.0") (emacs "24"))
 
 ;; This program is free software; you can redistribute it and/or
@@ -21,10 +21,10 @@
 
 ;;; Commentary:
 
-;; List the whole line to another buffer, which is able to squeeze
+;; List the all lines to another buffer, which is able to squeeze
 ;; by any words you input. At the same time, the original buffer's
 ;; cursor is jumping line to line according to moving up and down
-;; the line list.
+;; the list.
 
 ;;; Code:
 
@@ -107,7 +107,7 @@
       )))
 
 (defun helm-swoop-list ()
-  "Get the whole line in buffer into list"
+  "Get the all lines in buffer into list"
   (let ($list $line $pos)
     (save-excursion
       (goto-char (point-min))
@@ -126,15 +126,12 @@
                   do (forward-line 1))))
     $list))
 
-(defun helm-c-source-whole-line ($list)
-  `((name . "Helm Whole Line")
+(defun helm-c-source-swoop ($list)
+  `((name . "Helm Swoop")
     (candidates . ,$list)
     (candidatees-in-buffer)
     (action . (lambda ($po) (goto-line $po) (recenter))))
   )
-
-;; Store function to restore later
-(setq helm-swoop-tmp helm-display-function)
 
 (defvar-local helm-swoop-cache nil
   "If buffer is not modified, cache is used")
@@ -142,9 +139,9 @@
 ;;;###autoload
 (defun helm-swoop ()
   (interactive)
-  "List whole line to another buffer, which is able to squeeze
-by any words you input. At the same time, the original buffer's
-cursor is jumping line to line according to moving up and down."
+  "List the all lines to another buffer, which is able to squeeze by
+ any words you input. At the same time, the original buffer's cursor
+ is jumping line to line according to moving up and down the list."
   (setq helm-swoop-synchronizing-window (selected-window))
   (setq helm-swoop-last-point (point))
   (setq helm-swoop-target-buffer (current-buffer))
@@ -163,8 +160,8 @@ cursor is jumping line to line according to moving up and down."
         (add-hook 'helm-move-selection-after-hook
                   'helm-swoop-synchronizing-position)
         ;; Execute helm
-        (helm :sources (helm-c-source-whole-line $list)
-              :buffer "*Helm Whole Line*"
+        (helm :sources (helm-c-source-swoop $list)
+              :buffer "*Helm Swoop*"
               :preselect
               ;; get current line has content or else near one
               (if (string-match "^[\t\n\s]*$" $line)
@@ -179,7 +176,7 @@ cursor is jumping line to line according to moving up and down."
     (progn
       (remove-hook 'helm-move-selection-after-hook
                    'helm-swoop-synchronizing-position)
-      (setq helm-display-function helm-swoop-tmp)
+      (setq helm-display-function helm-swoop-display-tmp)
       (setq helm-swoop-first-time nil)
       (delete-overlay helm-swoop-overlay)
       )))
