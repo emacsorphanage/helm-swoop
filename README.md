@@ -1,12 +1,23 @@
-List the whole line to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
+List the multi lines to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
+
+## Youtube video
+
+I do not take your time too much. This is only 30 seconds. 
+
+[here](http://www.youtube.com/watch?v=RfasCCuCEgM)
 
 ### Config
 
 ```elisp
-(add-to-list 'load-path "/path/to/helm-swoop")
+;; helm from https://github.com/emacs-helm/helm
+(require 'helm-config)
+(helm-mode 1)
+
+;; Locate the helm-swwop folder to your path
+(add-to-list 'load-path "~/.emacs.d/elisp/helm-swoop")
 (require 'helm-swoop)
 
-;; Change the keybinds to whatever you like
+;; Change the keybinds to whatever you like :)
 (global-set-key (kbd "M-i") 'helm-swoop)
 (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
 
@@ -22,3 +33,4 @@ List the whole line to another buffer, which is able to squeeze by any words you
 ### Require
 
 [helm.el](https://github.com/emacs-helm/helm)
+
