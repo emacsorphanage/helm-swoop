@@ -133,6 +133,10 @@
     (action . (lambda ($po) (goto-line $po) (recenter))))
   )
 
+
+(defvar helm-swoop-display-tmp helm-display-function
+  "To restore helm window display function")
+
 (defvar-local helm-swoop-cache nil
   "If buffer is not modified, cache is used")
 
