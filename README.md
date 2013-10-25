@@ -30,6 +30,11 @@ I do not take your time too much. This is only 30 seconds.
     ))
 ```
 
+### Usage
+
+`M-x helm-swoop` or just press the keybind you set (above [M-i]). 
+It can use words within region as search query when it called.
+
 ### Require
 
 [helm.el](https://github.com/emacs-helm/helm)

@@ -89,13 +89,13 @@
   (with-helm-window
     (let* (($key (helm-swoop-trim-whitespace
                   (helm-swoop-get-string-at-line)))
-           ($cand (assoc-default 'candidates (helm-get-current-source)))
-           ($prop (assoc-default $key $cand)))
+           ($num (when (string-match "^[0-9]+" $key)
+                    (string-to-number (match-string 0 $key)))))
       ;; Synchronizing line position
       (with-selected-window helm-swoop-synchronizing-window
         (if helm-swoop-first-time
             (progn
-              (goto-line $prop)
+              (goto-line $num)
               (with-current-buffer helm-swoop-target-buffer
                 (delete-overlay helm-swoop-overlay)
                 (helm-swoop-target-overlay))
@@ -108,7 +108,7 @@
 
 (defun helm-swoop-list ()
   "Get the all lines in buffer into list"
-  (let ($list $line $pos)
+  (let ($list $line)
     (save-excursion
       (goto-char (point-min))
       (setq $list
@@ -116,13 +116,7 @@
                   if (not (string-match
                            "^[\t\n\s]*$"
                            (setq $line (helm-swoop-get-string-at-line))))
-                  collect (cons
-                           (helm-swoop-trim-whitespace
-                            (concat
-                             (format "%s" (setq $pos (line-number-at-pos)))
-                             " "
-                             $line))
-                           $pos)
+                  collect (format "%s %s" (line-number-at-pos) $line)
                   do (forward-line 1))))
     $list))
 
@@ -130,9 +124,11 @@
   `((name . "Helm Swoop")
     (candidates . ,$list)
     (candidatees-in-buffer)
-    (action . (lambda ($po) (goto-line $po) (recenter))))
-  )
-
+    (action . (lambda ($line)
+                (goto-line
+                 (when (string-match "^[0-9]+" $line)
+                   (string-to-number (match-string 0 $line))))
+                (recenter)))))
 
 (defvar helm-swoop-display-tmp helm-display-function
   "To restore helm window display function")
@@ -156,26 +152,29 @@
         ((buffer-modified-p)
          (setq helm-swoop-cache (helm-swoop-list))))
   (unwind-protect
-      (let (($list (helm-swoop-list))
-            ($line (helm-swoop-get-string-at-line)))
+      (let (($line (helm-swoop-get-string-at-line)))
         ;; Modify window split function temporary
         (setq helm-display-function helm-swoop-split-window-function)
         ;; For synchronizing line position
         (add-hook 'helm-move-selection-after-hook
                   'helm-swoop-synchronizing-position)
         ;; Execute helm
-        (helm :sources (helm-c-source-swoop $list)
+        (helm :sources (helm-c-source-swoop helm-swoop-cache)
               :buffer "*Helm Swoop*"
+              :input
+              (if mark-active
+                (buffer-substring-no-properties (region-beginning) (region-end))
+                "")
               :preselect
               ;; get current line has content or else near one
               (if (string-match "^[\t\n\s]*$" $line)
                   (save-excursion
                     (if (re-search-forward "[^\t\n\s]" nil t)
-                        (format "^%s" (line-number-at-pos))
+                        (format "^%s\s" (line-number-at-pos))
                       (re-search-backward "[^\t\n\s]" nil t)
-                      (format "^%s" (line-number-at-pos))))
-                (format "^%s" (line-number-at-pos)))
-              :candidate-number-limit 999))
+                      (format "^%s\s" (line-number-at-pos))))
+                (format "^%s\s" (line-number-at-pos)))
+              :candidate-number-limit 19999))
     ;; Restore helm's hook and window function
     (progn
       (remove-hook 'helm-move-selection-after-hook
