@@ -72,6 +72,11 @@
       (goto-char helm-swoop-last-point)
       (setq helm-swoop-last-point $po))))
 
+(defun helm-swoop-goto-line ($line)
+  (goto-char (point-min))
+  (unless (search-forward "\n" nil t (1- $line))
+    (goto-char (point-max))))
+
 (defun helm-swoop-delete-overlay (&optional $beg $end)
   (or $beg (setq $beg (point-min)))
   (or $end (setq $end (point-max)))
@@ -100,7 +105,7 @@
       (with-selected-window helm-swoop-synchronizing-window
         (if helm-swoop-first-time
             (progn
-              (goto-line $num)
+              (helm-swoop-goto-line $num)
               (with-current-buffer helm-swoop-target-buffer
                 (delete-overlay helm-swoop-overlay)
                 (helm-swoop-target-line-overlay))
@@ -148,9 +153,14 @@
     (candidates . ,$list)
     (candidatees-in-buffer)
     (action . (lambda ($line)
-                (goto-line
+                (helm-swoop-goto-line
                  (when (string-match "^[0-9]+" $line)
                    (string-to-number (match-string 0 $line))))
+                (when (re-search-forward
+                       (mapconcat 'identity
+                                  (split-string helm-pattern " ") "\\|")
+                       nil t)
+                  (goto-char (match-beginning 0)))
                 (recenter)))))
 
 (defvar helm-swoop-display-tmp helm-display-function
