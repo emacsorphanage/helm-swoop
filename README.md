@@ -1,10 +1,10 @@
 List the multi lines to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
 
-### Youtube video
+### Youtube
 
-I don't take your time too much. Only 30 seconds. 
+I don't take your time too much. Only 28 seconds. 
 
-[here](http://www.youtube.com/watch?v=RfasCCuCEgM)
+[here](http://www.youtube.com/embed/Mo5OSQUM51g?rel=0)
 
 ### Feature
 
