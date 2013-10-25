@@ -8,13 +8,13 @@ I don't take your time too much. Only 30 seconds.
 
 ### Feature
 
-* Squeeze the all lines list by your input
+* Squeeze all lines in buffer with your input
 * Highlight multiple matched pattern
 * Jumping line to line according to list buffer's move
 * Cache result
 * Go back to the last line
 
-Even if 10,000 lines buffer such as non-compression jQuery,
+Even if 10,000 lines buffer such as non-compression jQuery.
 First time it takes 0 ~ 1.0s though, but from the second time,
 it will be almost no time by employing cache list.
 Cache is valid until you modify the buffer.

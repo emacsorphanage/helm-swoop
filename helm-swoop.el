@@ -40,6 +40,9 @@
   '((foreground-color . "#ffffff")
     (background-color . "#7700ff")))
 
+(defvar helm-swoop-requires-pattern 1
+  "Input word threshold ")
+
 (defvar helm-swoop-split-window-function
   (lambda ($buf)
     (when (one-window-p)
@@ -148,6 +151,7 @@
   `((name . "Helm Swoop")
     (candidates . ,$list)
     (candidatees-in-buffer)
+    (requires-pattern . helm-swoop-requires-pattern)
     (action . (lambda ($line)
                 (goto-line
                  (when (string-match "^[0-9]+" $line)
