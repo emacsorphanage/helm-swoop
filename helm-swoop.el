@@ -36,6 +36,10 @@
   '((foreground-color . "#333333")
     (background-color . "#ffff00")))
 
+(defvar helm-swoop-target-word-face
+  '((foreground-color . "#ffffff")
+    (background-color . "#7700ff")))
+
 (defvar helm-swoop-split-window-function
   (lambda ($buf)
     (when (one-window-p)
@@ -74,12 +78,18 @@
       (match-string 1 $s)
     $s))
 
+(defun helm-swoop-delete-overlay (&optional $beg $end)
+  (or $beg (setq $beg (point-min)))
+  (or $end (setq $end (point-max)))
+  (dolist ($o (overlays-in $beg $end))
+    (delete-overlay $o)))
+
 (defun helm-swoop-get-string-at-line ()
   "Get string at the line. 10-20% firster than (thing-at-point 'line)"
   (buffer-substring-no-properties
  (point-at-bol) (point-at-eol)))
 
-(defun helm-swoop-target-overlay ()
+(defun helm-swoop-target-line-overlay ()
   "Add color to target line"
   (overlay-put (setq helm-swoop-overlay
                      (make-overlay (point-at-bol) (point-at-eol)))
@@ -98,13 +108,31 @@
               (goto-line $num)
               (with-current-buffer helm-swoop-target-buffer
                 (delete-overlay helm-swoop-overlay)
-                (helm-swoop-target-overlay))
+                (helm-swoop-target-line-overlay))
               (recenter))
           (move-beginning-of-line 1)
-          (helm-swoop-target-overlay)
+          (helm-swoop-target-line-overlay)
           (recenter)
           (setq helm-swoop-first-time t)))
       )))
+
+(defun helm-swoop-pattern-match ()
+  (with-helm-window
+    (setq ofwi helm-pattern)
+    (when (< 2 (length helm-pattern))
+        (with-selected-window helm-swoop-synchronizing-window
+          (helm-swoop-delete-overlay)
+          (save-excursion
+            (let (($pat (split-string helm-pattern " "))
+                  $o)
+              (dolist ($wd $pat)
+                ;; Each word must be 3 or more of characters
+                (when (< 2 (length $wd))
+                  (goto-char (point-min))
+                  (while (re-search-forward $wd nil t)
+                    (setq $o (make-overlay (match-beginning 0) (match-end 0)))
+                    (overlay-put $o 'face helm-swoop-target-word-face)))))
+            )))))
 
 (defun helm-swoop-list ()
   "Get the all lines in buffer into list"
@@ -158,6 +186,8 @@
         ;; For synchronizing line position
         (add-hook 'helm-move-selection-after-hook
                   'helm-swoop-synchronizing-position)
+        (add-hook 'helm-update-hook
+                  'helm-swoop-pattern-match)
         ;; Execute helm
         (helm :sources (helm-c-source-swoop helm-swoop-cache)
               :buffer "*Helm Swoop*"
@@ -179,9 +209,12 @@
     (progn
       (remove-hook 'helm-move-selection-after-hook
                    'helm-swoop-synchronizing-position)
+      (remove-hook 'helm-update-hook
+                   'helm-swoop-pattern-match)
       (setq helm-display-function helm-swoop-display-tmp)
       (setq helm-swoop-first-time nil)
       (delete-overlay helm-swoop-overlay)
+      (helm-swoop-delete-overlay)
       )))
 
 (provide 'helm-swoop)

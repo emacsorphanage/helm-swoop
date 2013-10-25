@@ -28,6 +28,11 @@ I do not take your time too much. This is only 30 seconds.
     (font-weight . "bold")
     ;;(underline . t)
     ))
+
+;; Change target word color face
+(setq helm-swoop-target-word-face
+  '((foreground-color . "#ffffff")
+    (background-color . "#7700ff")))
 ```
 
 ### Usage
