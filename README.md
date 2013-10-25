@@ -1,10 +1,23 @@
 List the multi lines to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
 
-## Youtube video
+### Youtube video
 
-I do not take your time too much. This is only 30 seconds. 
+I don't take your time too much. Only 30 seconds. 
 
 [here](http://www.youtube.com/watch?v=RfasCCuCEgM)
+
+### Feature
+
+* Squeeze the all lines list by your input
+* Highlight multiple matched pattern
+* Jumping line to line according to list buffer's move
+* Cache result
+* Go back to the last line
+
+Even if 10,000 lines buffer such as non-compression jQuery,
+First time it takes 0 ~ 1.0s though, but from the second time,
+it will be almost no time by employing cache list.
+Cache is valid until you modify the buffer.
 
 ### Config
 
@@ -37,8 +50,8 @@ I do not take your time too much. This is only 30 seconds.
 
 ### Usage
 
-`M-x helm-swoop` or just press the keybind you set (above [M-i]). 
-It can use words within region as search query when it called.
+`M-x helm-swoop` or just press the keybind you set. 
+It's able to use words within region as search query when it called.
 
 ### Require
 
