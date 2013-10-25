@@ -114,7 +114,6 @@
 (defun helm-swoop-pattern-match ()
   "Overlay target words"
   (with-helm-window
-    (setq ofwi helm-pattern)
     (when (< 2 (length helm-pattern))
         (with-selected-window helm-swoop-synchronizing-window
           (helm-swoop-delete-overlay)
@@ -161,7 +160,7 @@
   "If buffer is not modified, cache is used")
 
 ;;;###autoload
-(defun* helm-swoop ()
+(defun helm-swoop ()
   (interactive)
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
@@ -192,8 +191,7 @@
                   (let (($st (buffer-substring-no-properties
                               (region-beginning) (region-end))))
                   (if (string-match "\n" $st)
-                      (return-from helm-sweep
-                        (message "Multi line region is not allowed"))
+                      (message "Multi line region is not allowed")
                     $st))
                 "")
               :preselect
