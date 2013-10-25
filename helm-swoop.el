@@ -72,12 +72,6 @@
       (goto-char helm-swoop-last-point)
       (setq helm-swoop-last-point $po))))
 
-(defun helm-swoop-trim-whitespace ($s)
-  "Return string without whitespace at the both beginning and end"
-  (if (string-match "\\`\\(?:\\s-+\\)?\\(.+?\\)\\(?:\\s-+\\)?\\'" $s)
-      (match-string 1 $s)
-    $s))
-
 (defun helm-swoop-delete-overlay (&optional $beg $end)
   (or $beg (setq $beg (point-min)))
   (or $end (setq $end (point-max)))
@@ -90,15 +84,16 @@
  (point-at-bol) (point-at-eol)))
 
 (defun helm-swoop-target-line-overlay ()
-  "Add color to target line"
+  "Add color to the target line"
   (overlay-put (setq helm-swoop-overlay
                      (make-overlay (point-at-bol) (point-at-eol)))
                'face helm-swoop-target-line-face))
 
+;; core ------------------------------------------------
+
 (defun helm-swoop-synchronizing-position ()
   (with-helm-window
-    (let* (($key (helm-swoop-trim-whitespace
-                  (helm-swoop-get-string-at-line)))
+    (let* (($key (helm-swoop-get-string-at-line))
            ($num (when (string-match "^[0-9]+" $key)
                     (string-to-number (match-string 0 $key)))))
       ;; Synchronizing line position
@@ -117,6 +112,7 @@
       )))
 
 (defun helm-swoop-pattern-match ()
+  "Overlay target words"
   (with-helm-window
     (setq ofwi helm-pattern)
     (when (< 2 (length helm-pattern))
@@ -165,7 +161,7 @@
   "If buffer is not modified, cache is used")
 
 ;;;###autoload
-(defun helm-swoop ()
+(defun* helm-swoop ()
   (interactive)
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
@@ -193,10 +189,15 @@
               :buffer "*Helm Swoop*"
               :input
               (if mark-active
-                (buffer-substring-no-properties (region-beginning) (region-end))
+                  (let (($st (buffer-substring-no-properties
+                              (region-beginning) (region-end))))
+                  (if (string-match "\n" $st)
+                      (return-from helm-sweep
+                        (message "Multi line region is not allowed"))
+                    $st))
                 "")
               :preselect
-              ;; get current line has content or else near one
+              ;; Get current line has content or else near one
               (if (string-match "^[\t\n\s]*$" $line)
                   (save-excursion
                     (if (re-search-forward "[^\t\n\s]" nil t)
@@ -215,6 +216,7 @@
       (setq helm-swoop-first-time nil)
       (delete-overlay helm-swoop-overlay)
       (helm-swoop-delete-overlay)
+      (deactivate-mark t)
       )))
 
 (provide 'helm-swoop)
