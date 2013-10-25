@@ -171,10 +171,10 @@
               (if (string-match "^[\t\n\s]*$" $line)
                   (save-excursion
                     (if (re-search-forward "[^\t\n\s]" nil t)
-                        (concat "^" (format "%s" (line-number-at-pos)))
+                        (format "^%s" (line-number-at-pos))
                       (re-search-backward "[^\t\n\s]" nil t)
-                      (concat "^" (format "%s" (line-number-at-pos)))))
-                (concat "^" (format "%s" (line-number-at-pos))))
+                      (format "^%s" (line-number-at-pos))))
+                (format "^%s" (line-number-at-pos)))
               :candidate-number-limit 999))
     ;; Restore helm's hook and window function
     (progn
