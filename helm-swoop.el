@@ -174,8 +174,8 @@
                         (setq helm-swoop-cache nil))))
 
 ;;;###autoload
-(defun helm-swoop ()
-  (interactive)
+(defun helm-swoop (&optional $prefix)
+  (interactive "p")
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
  is jumping line to line according to moving up and down the list."
@@ -207,13 +207,17 @@
         (helm :sources (helm-c-source-swoop helm-swoop-cache)
               :buffer "*Helm Swoop*"
               :input
-              (if mark-active
-                  (let (($st (buffer-substring-no-properties
-                              (region-beginning) (region-end))))
-                  (if (string-match "\n" $st)
-                      (message "Multi line region is not allowed")
-                    $st))
-                "")
+              (cond (mark-active
+                     (let (($st (buffer-substring-no-properties
+                                 (region-beginning) (region-end))))
+                       (if (string-match "\n" $st)
+                           (message "Multi line region is not allowed")
+                         $st)))
+                    ((eq 1 $prefix) ;; without [C-u] or with [C-u 1]
+                     (thing-at-point 'symbol))
+                    ;; still not set. with prefix [C-u] (or [C-u] with number)
+                    ;; ((<= 2 $prefix))
+                    (t ""))
               :preselect
               ;; Get current line has content or else near one
               (if (string-match "^[\t\n\s]*$" $line)

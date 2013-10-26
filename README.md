@@ -19,6 +19,17 @@ First time it takes 0 ~ 1.0s though, but from the second time,
 it will be almost no time by employing cache list.
 Cache is valid until you modify the buffer.
 
+
+### Usage
+
+Now this has three way.
+
+* `M-x helm-swoop` when region active
+* `M-x helm-swoop` when the cursor is at any symbol
+* `M-x helm-swoop` when the cursor is not at any symbol
+
+It's able to use words within region or a word at symbol as search query when it called. Also use keybind you set just type like M-i instead of `M-x helm-swoop`.
+
 ### Config
 
 ```elisp
@@ -47,11 +58,6 @@ Cache is valid until you modify the buffer.
   '((foreground-color . "#ffffff")
     (background-color . "#7700ff")))
 ```
-
-### Usage
-
-`M-x helm-swoop` or just press the keybind you set. 
-It's able to use words within region as search query when it called.
 
 ### Require
 
