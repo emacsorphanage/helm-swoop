@@ -49,20 +49,8 @@
     (switch-to-buffer $buf))
   "Change the way to split window only when `helm-swoop' is calling")
 
-(defvar helm-swoop-last-point nil
-  "For jump back once")
-
-(defvar helm-swoop-first-time nil
-  "For keep line position when `helm-swoop' calls")
-
-(defvar helm-swoop-synchronizing-window nil
-  "Store window identity for synchronizing")
-
-(defvar helm-swoop-overlay nil
-  "Store overlay object")
-
-(defvar helm-swoop-target-buffer nil
-  "For overlay")
+(defvar helm-swoop-first-position nil
+  "For keep line position when `helm-swoop' is called")
 
 (defun helm-swoop-back-to-last-point ()
   (interactive)
@@ -94,6 +82,22 @@
                      (make-overlay (point-at-bol) (point-at-eol)))
                'face helm-swoop-target-line-face))
 
+;;; Need fix redundancy <<<
+(defvar helm-swoop-synchronizing-window nil)
+(defvar helm-swoop-target-buffer nil)
+(defvar helm-swoop-overlay nil)
+(add-hook
+ 'after-change-major-mode-hook
+ (lambda ()
+   (set (make-local-variable 'helm-swoop-cache) nil)
+   (set (make-local-variable 'helm-swoop-last-point) nil)))
+(add-hook
+ 'temp-buffer-show-hook
+ (lambda ()
+   (set (make-local-variable 'helm-swoop-cache) nil)
+   (set (make-local-variable 'helm-swoop-last-point) nil)))
+;;; >>> Need fix redundancy
+
 ;; core ------------------------------------------------
 
 (defun helm-swoop-synchronizing-position ()
@@ -103,7 +107,7 @@
                     (string-to-number (match-string 0 $key)))))
       ;; Synchronizing line position
       (with-selected-window helm-swoop-synchronizing-window
-        (if helm-swoop-first-time
+        (if helm-swoop-first-position
             (progn
               (helm-swoop-goto-line $num)
               (with-current-buffer helm-swoop-target-buffer
@@ -113,7 +117,7 @@
           (move-beginning-of-line 1)
           (helm-swoop-target-line-overlay)
           (recenter)
-          (setq helm-swoop-first-time t)))
+          (setq helm-swoop-first-position t)))
       )))
 
 (defun helm-swoop-pattern-match ()
@@ -165,9 +169,6 @@
 
 (defvar helm-swoop-display-tmp helm-display-function
   "To restore helm window display function")
-
-(defvar-local helm-swoop-cache nil
-  "If buffer is not modified, cache is used")
 
 ;;;###autoload
 (defun helm-swoop ()
@@ -221,7 +222,7 @@
       (remove-hook 'helm-update-hook
                    'helm-swoop-pattern-match)
       (setq helm-display-function helm-swoop-display-tmp)
-      (setq helm-swoop-first-time nil)
+      (setq helm-swoop-first-position nil)
       (delete-overlay helm-swoop-overlay)
       (helm-swoop-delete-overlay)
       (deactivate-mark t)
