@@ -167,6 +167,12 @@
 (defvar helm-swoop-display-tmp helm-display-function
   "To restore helm window display function")
 
+;; Delete cache when modified file is saved
+(add-hook
+ 'after-save-hook (lambda ()
+                    (if helm-swoop-cache
+                        (setq helm-swoop-cache nil))))
+
 ;;;###autoload
 (defun helm-swoop ()
   (interactive)
@@ -183,8 +189,7 @@
   (setq helm-swoop-overlay (make-overlay (point-at-bol) (point-at-eol)))
   ;; Cache
   (cond ((not (boundp 'helm-swoop-cache))
-         (set (make-local-variable 'helm-swoop-cache) nil)
-         (setq helm-swoop-cache (helm-swoop-list)))
+         (set (make-local-variable 'helm-swoop-cache) (helm-swoop-list)))
         ((not helm-swoop-cache)
          (setq helm-swoop-cache (helm-swoop-list)))
         ((buffer-modified-p)
