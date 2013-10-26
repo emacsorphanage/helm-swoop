@@ -57,3 +57,9 @@ It's able to use words within region as search query when it called.
 
 [helm.el](https://github.com/emacs-helm/helm)
 
+#### Optional Require
+
+For Japanese input system.
+
+[helm-migemo.el](https://github.com/emacs-helm/helm-migemo)
+

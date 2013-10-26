@@ -52,13 +52,26 @@
 (defvar helm-swoop-first-position nil
   "For keep line position when `helm-swoop' is called")
 
+;; Avoid compile error for apply buffer local variable
+(defvar helm-swoop-cache)
+(defvar helm-swoop-last-point)
+
+(defvar helm-swoop-synchronizing-window nil
+  "Window object where `helm-swoop' called from")
+(defvar helm-swoop-target-buffer nil
+  "Buffer object where `helm-swoop' called from")
+(defvar helm-swoop-overlay nil
+  "Overlay object to indicates other window's line")
+
 (defun helm-swoop-back-to-last-point ()
   (interactive)
   "Go back to last position where `helm-swoop' was called"
-  (when helm-swoop-last-point
+  (if (and (boundp helm-swoop-last-point)
+           helm-swoop-last-point)
     (let (($po (point)))
       (goto-char helm-swoop-last-point)
-      (setq helm-swoop-last-point $po))))
+      (setq helm-swoop-last-point $po)))
+  (message "There is no last point. Use this again after `helm-swoop' call"))
 
 (defun helm-swoop-goto-line ($line)
   (goto-char (point-min))
@@ -81,12 +94,6 @@
   (overlay-put (setq helm-swoop-overlay
                      (make-overlay (point-at-bol) (point-at-eol)))
                'face helm-swoop-target-line-face))
-
-;;; Need fix redundancy <<<
-(defvar helm-swoop-synchronizing-window nil)
-(defvar helm-swoop-target-buffer nil)
-(defvar helm-swoop-overlay nil)
-;;; >>> Need fix redundancy
 
 ;; core ------------------------------------------------
 
@@ -145,7 +152,6 @@
 (defun helm-c-source-swoop ($list)
   `((name . "Helm Swoop")
     (candidates . ,$list)
-    (candidatees-in-buffer)
     (action . (lambda ($line)
                 (helm-swoop-goto-line
                  (when (string-match "^[0-9]+" $line)
@@ -155,7 +161,8 @@
                                   (split-string helm-pattern " ") "\\|")
                        nil t)
                   (goto-char (match-beginning 0)))
-                (recenter)))))
+                (recenter)))
+    (migemo)))
 
 (defvar helm-swoop-display-tmp helm-display-function
   "To restore helm window display function")
