@@ -86,16 +86,6 @@
 (defvar helm-swoop-synchronizing-window nil)
 (defvar helm-swoop-target-buffer nil)
 (defvar helm-swoop-overlay nil)
-(add-hook
- 'after-change-major-mode-hook
- (lambda ()
-   (set (make-local-variable 'helm-swoop-cache) nil)
-   (set (make-local-variable 'helm-swoop-last-point) nil)))
-(add-hook
- 'temp-buffer-show-hook
- (lambda ()
-   (set (make-local-variable 'helm-swoop-cache) nil)
-   (set (make-local-variable 'helm-swoop-last-point) nil)))
 ;;; >>> Need fix redundancy
 
 ;; core ------------------------------------------------
@@ -177,11 +167,18 @@
  any words you input. At the same time, the original buffer's cursor
  is jumping line to line according to moving up and down the list."
   (setq helm-swoop-synchronizing-window (selected-window))
+  (if (boundp 'helm-swoop-last-point)
+      (setq helm-swoop-last-point (point))
+    (set (make-local-variable 'helm-swoop-last-point) nil)
+    (setq helm-swoop-last-point (point)))
   (setq helm-swoop-last-point (point))
   (setq helm-swoop-target-buffer (current-buffer))
   (setq helm-swoop-overlay (make-overlay (point-at-bol) (point-at-eol)))
   ;; Cache
-  (cond ((not helm-swoop-cache)
+  (cond ((not (boundp 'helm-swoop-cache))
+         (set (make-local-variable 'helm-swoop-cache) nil)
+         (setq helm-swoop-cache (helm-swoop-list)))
+        ((not helm-swoop-cache)
          (setq helm-swoop-cache (helm-swoop-list)))
         ((buffer-modified-p)
          (setq helm-swoop-cache (helm-swoop-list))))
