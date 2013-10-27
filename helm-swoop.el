@@ -32,13 +32,19 @@
 
 (require 'helm)
 
-(defvar helm-swoop-target-line-face
-  '((foreground-color . "#333333")
-    (background-color . "#ffff00")))
+(defgroup helm-swoop nil
+  "Open helm-swoop."
+  :prefix "helm-swoop-" :group 'convenience)
 
-(defvar helm-swoop-target-word-face
-  '((foreground-color . "#ffffff")
-    (background-color . "#7700ff")))
+(defface helm-swoop-target-line-face
+  '((t (:background "#e3e300" :foreground "#222222")))
+  "Face for target line"
+  :group 'helm-swoop)
+
+(defface helm-swoop-target-word-face
+  '((t (:background "#7700ff" :foreground "#ffffff")))
+  "Face for target line"
+  :group 'helm-swoop)
 
 (defvar helm-swoop-split-window-function
   (lambda ($buf)
@@ -93,7 +99,7 @@
   "Add color to the target line"
   (overlay-put (setq helm-swoop-overlay
                      (make-overlay (point-at-bol) (point-at-eol)))
-               'face helm-swoop-target-line-face))
+               'face 'helm-swoop-target-line-face))
 
 ;; core ------------------------------------------------
 
@@ -132,7 +138,7 @@
                   (goto-char (point-min))
                   (while (re-search-forward $wd nil t)
                     (setq $o (make-overlay (match-beginning 0) (match-end 0)))
-                    (overlay-put $o 'face helm-swoop-target-word-face)))))
+                    (overlay-put $o 'face 'helm-swoop-target-word-face)))))
             )))))
 
 (defun helm-swoop-list ()
