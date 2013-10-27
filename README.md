@@ -44,19 +44,6 @@ It's able to use words within region or a word at symbol as search query when it
 ;; Change the keybinds to whatever you like :)
 (global-set-key (kbd "M-i") 'helm-swoop)
 (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
-
-;; Change target line color face
-(setq helm-swoop-target-line-face
-  '((foreground-color . "#333333")
-    (background-color . "#eeee00")
-    (font-weight . "bold")
-    ;;(underline . t)
-    ))
-
-;; Change target word color face
-(setq helm-swoop-target-word-face
-  '((foreground-color . "#ffffff")
-    (background-color . "#7700ff")))
 ```
 
 ### Require

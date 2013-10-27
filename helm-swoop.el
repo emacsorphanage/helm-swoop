@@ -135,8 +135,8 @@
             (let (($pat (split-string helm-pattern " "))
                   $o)
               (dolist ($wd $pat)
-                ;; Each word must be 2 or more of characters
-                (when (<= 2 (length $wd))
+                ;; Each word must be 3 or more of characters
+                (when (< 2 (length $wd))
                   (goto-char (point-min))
                   (while (re-search-forward $wd nil t)
                     (setq $o (make-overlay (match-beginning 0) (match-end 0)))
