@@ -34,11 +34,11 @@
 
 (defgroup helm-swoop nil
   "Open helm-swoop."
-  :prefix "helm-swoop-" :group 'convenience)
+  :prefix "helm-swoop-" :group 'helm)
 
 (defface helm-swoop-target-line-face
   '((t (:background "#e3e300" :foreground "#222222")))
-  "Face for target line"
+  "Face for helm-swoop target line"
   :group 'helm-swoop)
 
 (defface helm-swoop-target-word-face
@@ -74,7 +74,7 @@
 (defun helm-swoop-back-to-last-point ()
   (interactive)
   "Go back to last position where `helm-swoop' was called"
-  (if (and (boundp helm-swoop-last-point)
+  (if (and (boundp 'helm-swoop-last-point)
            helm-swoop-last-point)
     (let (($po (point)))
       (goto-char helm-swoop-last-point)
@@ -177,9 +177,9 @@
   "To restore helm window display function")
 
 ;; Delete cache when modified file is saved
-(add-hook 'after-save-hook
-          (lambda () (if (boundp 'helm-swoop-cache)
-                         (setq helm-swoop-cache nil))))
+(defun helm-swoop-clear-cache ()
+  (if (boundp 'helm-swoop-cache) (setq helm-swoop-cache nil)))
+(add-hook 'after-save-hook 'helm-swoop-clear-cache)
 
 ;;;###autoload
 (defun helm-swoop (&optional $prefix)
@@ -190,8 +190,7 @@
   (setq helm-swoop-synchronizing-window (selected-window))
   (if (boundp 'helm-swoop-last-point)
       (setq helm-swoop-last-point (point))
-    (set (make-local-variable 'helm-swoop-last-point) nil)
-    (setq helm-swoop-last-point (point)))
+    (set (make-local-variable 'helm-swoop-last-point) (point)))
   (setq helm-swoop-last-point (point))
   (setq helm-swoop-target-buffer (current-buffer))
   (setq helm-swoop-line-overlay (make-overlay (point-at-bol) (point-at-eol)))
