@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 1.0
+;; Version: 1.1
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
@@ -144,23 +144,33 @@
                     (overlay-put $o 'helm-swoop-target-word-face t)
                     )))))))))
 
-(defun helm-swoop-list ()
-  "Get the all lines in buffer into list"
-  (let ($list $line)
-    (save-excursion
+(defun helm-swoop-get-content ()
+  "Get the whole content in buffer and add line number at the head"
+  (let (($buffer-contents
+         (buffer-substring-no-properties (point-min) (point-max)))
+        $return)
+    (with-temp-buffer
+      (insert $buffer-contents)
       (goto-char (point-min))
-      (setq $list
-            (loop until (eobp)
-                  if (not (string-match
-                           "^[\t\n\s]*$"
-                           (setq $line (helm-swoop-get-string-at-line))))
-                  collect (format "%s %s" (line-number-at-pos) $line)
-                  do (forward-line 1))))
-    $list))
+      (let (($i 1))
+        (insert (format "%s " $i))
+        (while (search-forward "\n" nil t)
+          (incf $i)
+          (insert (format "%s " $i)))
+        (goto-char (point-min))
+        (while (re-search-forward "^[0-9]+\s-*$" nil t)
+          (replace-match "")))
+      (setq $return (buffer-substring-no-properties (point-min) (point-max))))
+    $return))
 
-(defun helm-c-source-swoop ($list)
+(defun helm-c-source-swoop ()
   `((name . "Helm Swoop")
-    (candidates . ,$list)
+    (init . (lambda ()
+              (unless helm-swoop-cache
+                (with-current-buffer (helm-candidate-buffer 'local)
+                  (insert ,(helm-swoop-get-content)))
+                (setq helm-swoop-cache t))))
+    (candidates-in-buffer)
     (action . (lambda ($line)
                 (helm-swoop-goto-line
                  (when (string-match "^[0-9]+" $line)
@@ -170,8 +180,7 @@
                                   (split-string helm-pattern " ") "\\|")
                        nil t)
                   (goto-char (match-beginning 0)))
-                (recenter)))
-    (migemo)))
+                (recenter)))))
 
 (defvar helm-swoop-display-tmp helm-display-function
   "To restore helm window display function")
@@ -196,11 +205,11 @@
   (setq helm-swoop-line-overlay (make-overlay (point-at-bol) (point-at-eol)))
   ;; Cache
   (cond ((not (boundp 'helm-swoop-cache))
-         (set (make-local-variable 'helm-swoop-cache) (helm-swoop-list)))
+         (set (make-local-variable 'helm-swoop-cache) nil))
         ((not helm-swoop-cache)
-         (setq helm-swoop-cache (helm-swoop-list)))
+         (setq helm-swoop-cache nil))
         ((buffer-modified-p)
-         (setq helm-swoop-cache (helm-swoop-list))))
+         (setq helm-swoop-cache nil)))
   (unwind-protect
       (let (($line (helm-swoop-get-string-at-line)))
         ;; Modify window split function temporary
@@ -211,7 +220,7 @@
         (add-hook 'helm-update-hook
                   'helm-swoop-pattern-match)
         ;; Execute helm
-        (helm :sources (helm-c-source-swoop helm-swoop-cache)
+        (helm :sources (helm-c-source-swoop)
               :buffer "*Helm Swoop*"
               :input
               (cond (mark-active
