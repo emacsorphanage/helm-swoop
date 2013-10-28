@@ -158,7 +158,7 @@
           (incf $i)
           (insert (format "%s " $i)))
         (goto-char (point-min))
-        (while (re-search-forward "^[0-9]+\s-*$" nil t)
+        (while (re-search-forward "^[0-9]+\\s-*$" nil t)
           (replace-match "")))
       (setq $return (buffer-substring-no-properties (point-min) (point-max))))
     $return))
