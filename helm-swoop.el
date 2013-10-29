@@ -138,6 +138,10 @@
                 ;; Each word must be 3 or more of characters
                 (when (< 2 (length $wd))
                   (goto-char (point-min))
+                  ;; Optional require migemo.el & helm-migemo.el
+                  (if (functionp 'helm-migemo)
+                      (setq $wd (migemo-search-pattern-get $wd)))
+
                   (while (re-search-forward $wd nil t)
                     (setq $o (make-overlay (match-beginning 0) (match-end 0)))
                     (overlay-put $o 'face 'helm-swoop-target-word-face)
@@ -180,7 +184,8 @@
                                   (split-string helm-pattern " ") "\\|")
                        nil t)
                   (goto-char (match-beginning 0)))
-                (recenter)))))
+                (recenter)))
+    (migemo)))
 
 (defvar helm-swoop-display-tmp helm-display-function
   "To restore helm window display function")
@@ -190,8 +195,18 @@
   (if (boundp 'helm-swoop-cache) (setq helm-swoop-cache nil)))
 (add-hook 'after-save-hook 'helm-swoop-clear-cache)
 
+;; Employ word from isearch
+;; (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+(defun helm-swoop-from-isearch ()
+  "Invoke `helm-occur' from isearch."
+  (interactive)
+  (let (($input (if isearch-regexp
+                    isearch-string
+                  (regexp-quote isearch-string))))
+    (helm-swoop 0 $input)))
+
 ;;;###autoload
-(defun helm-swoop (&optional $prefix)
+(defun helm-swoop (&optional $prefix $input)
   (interactive "p")
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
@@ -223,7 +238,8 @@
         (helm :sources (helm-c-source-swoop)
               :buffer "*Helm Swoop*"
               :input
-              (cond (mark-active
+              (cond ($input $input)
+                    (mark-active
                      (let (($st (buffer-substring-no-properties
                                  (region-beginning) (region-end))))
                        (if (string-match "\n" $st)

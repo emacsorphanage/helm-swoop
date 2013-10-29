@@ -4,7 +4,7 @@ List the multi lines to another buffer, which is able to squeeze by any words yo
 
 I don't take your time too much. Only 28 seconds. 
 
-[here](http://www.youtube.com/embed/Mo5OSQUM51g?rel=0)
+[Youtube video here](http://www.youtube.com/embed/Mo5OSQUM51g?rel=0)
 
 ### Feature
 
@@ -44,6 +44,9 @@ It's able to use words within region or a word at symbol as search query when it
 ;; Change the keybinds to whatever you like :)
 (global-set-key (kbd "M-i") 'helm-swoop)
 (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
+
+;; When doing isearch, hand the word over to helm-swoop
+(define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
 ```
 
 ### Require
