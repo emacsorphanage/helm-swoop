@@ -63,6 +63,7 @@
 ;; Avoid compile error for apply buffer local variable
 (defvar helm-swoop-cache)
 (defvar helm-swoop-last-point)
+(defvar helm-swoop-last-query) ;; Last search query for resume
 
 (defvar helm-swoop-synchronizing-window nil
   "Window object where `helm-swoop' called from")
@@ -72,6 +73,7 @@
 
 (defvar helm-swoop-line-overlay nil
   "Overlay object to indicates other window's line")
+
 
 (defun helm-swoop-back-to-last-point ()
   (interactive)
@@ -217,6 +219,8 @@
   (if (boundp 'helm-swoop-last-point)
       (setq helm-swoop-last-point (point))
     (set (make-local-variable 'helm-swoop-last-point) (point)))
+  (unless (boundp 'helm-swoop-last-query)
+    (set (make-local-variable 'helm-swoop-last-query) ""))
   (setq helm-swoop-last-point (point))
   (setq helm-swoop-target-buffer (current-buffer))
   (setq helm-swoop-line-overlay (make-overlay (point-at-bol) (point-at-eol)))
@@ -270,9 +274,28 @@
                    'helm-swoop-pattern-match)
       (setq helm-display-function helm-swoop-display-tmp)
       (setq helm-swoop-first-position nil)
+      (setq helm-swoop-last-query helm-pattern)
       (delete-overlay helm-swoop-line-overlay)
       (helm-swoop-delete-overlay)
       (deactivate-mark t))))
+
+;; For helm-resume
+(defadvice helm-resume-select-buffer
+  (after helm-swoop-if-selected-as-resume activate)
+  "Resume if *Helm Swoop* buffer selected as resume
+ when helm-resume with prefix"
+  (when (and (equal ad-return-value "*Helm Swoop*")
+             (boundp 'helm-swoop-last-query))
+    (progn (helm-swoop 0 helm-swoop-last-query)
+           (setq ad-return-value nil))))
+
+(defadvice helm-resume (around helm-swoop-resume activate)
+  "Resume if the last used helm buffer is *Helm Swoop*"
+  (if (and (equal helm-last-buffer "*Helm Swoop*")
+           (boundp 'helm-swoop-last-query)
+           (not (ad-get-arg 0)))
+      (helm-swoop 0 helm-swoop-last-query)
+    ad-do-it))
 
 (provide 'helm-swoop)
 ;;; helm-swoop.el ends here
