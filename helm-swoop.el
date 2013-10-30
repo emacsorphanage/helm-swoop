@@ -32,7 +32,7 @@
 
 (require 'helm)
 
-(autoload 'migemo-search-pattern-get "migemo" nil t)
+(declare-function migemo-search-pattern-get "migemo")
 
 (defgroup helm-swoop nil
   "Open helm-swoop."
@@ -141,7 +141,7 @@
                 (when (< 2 (length $wd))
                   (goto-char (point-min))
                   ;; Optional require migemo.el & helm-migemo.el
-                  (if (functionp 'helm-migemo)
+                  (if (and (featurep 'migemo) (featurep 'helm-migemo))
                       (setq $wd (migemo-search-pattern-get $wd)))
 
                   (while (re-search-forward $wd nil t)
