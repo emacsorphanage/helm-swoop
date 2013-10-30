@@ -11,14 +11,10 @@ I don't take your time too much. Only 28 seconds.
 * Squeeze all lines in buffer with your input
 * Highlight multiple matched pattern
 * Jumping line to line according to list buffer's move
-* Cache result
+* Cache result until modify the buffer
 * Go back to the last line
 
-Even if 10,000 lines buffer such as non-compression jQuery.
-First time it takes 0 ~ 1.0s though, but from the second time,
-it will be almost no time by employing cache list.
-Cache is valid until you modify the buffer.
-
+It'll work fine even if 70,000 lines buffer :)
 
 ### Usage
 

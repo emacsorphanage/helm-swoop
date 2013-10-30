@@ -32,6 +32,8 @@
 
 (require 'helm)
 
+(autoload 'migemo-search-pattern-get "migemo" nil t)
+
 (defgroup helm-swoop nil
   "Open helm-swoop."
   :prefix "helm-swoop-" :group 'helm)
