@@ -281,13 +281,18 @@
 
 ;; For helm-resume
 (defadvice helm-resume-select-buffer
-  (after helm-swoop-if-selected-as-resume activate)
-  "Resume if *Helm Swoop* buffer selected as resume
+  (around helm-swoop-if-selected-as-resume activate)
+  "Resume if *Helm Swoop* buffer selected as a resume
  when helm-resume with prefix"
+  (if (boundp 'helm-swoop-last-query)
+      ad-do-it
+    ;; When the buffer never call helm-swoop, just hide from options
+    (let ((helm-buffers (delete "*Helm Swoop*" helm-buffers)))
+      ad-do-it))
   (when (and (equal ad-return-value "*Helm Swoop*")
              (boundp 'helm-swoop-last-query))
-    (progn (helm-swoop 0 helm-swoop-last-query)
-           (setq ad-return-value nil))))
+    (helm-swoop 0 helm-swoop-last-query)
+    (setq ad-return-value nil)))
 
 (defadvice helm-resume (around helm-swoop-resume activate)
   "Resume if the last used helm buffer is *Helm Swoop*"
