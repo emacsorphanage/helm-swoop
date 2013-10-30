@@ -296,11 +296,14 @@
 
 (defadvice helm-resume (around helm-swoop-resume activate)
   "Resume if the last used helm buffer is *Helm Swoop*"
-  (if (and (equal helm-last-buffer "*Helm Swoop*")
-           (boundp 'helm-swoop-last-query)
-           (not (ad-get-arg 0)))
-      (helm-swoop 0 helm-swoop-last-query)
-    ad-do-it))
+  (if (equal helm-last-buffer "*Helm Swoop*") ;; 1
+      (if (boundp 'helm-swoop-last-query)  ;; 2
+          (if (not (ad-get-arg 0)) ;; 3
+              (helm-swoop 0 helm-swoop-last-query))
+        ;; Temporary apply second last buffer
+        (let ((helm-last-buffer (cadr helm-buffers))) ad-do-it)) ;; 2 else
+    ad-do-it) ;; 1 else
+    )
 
 (provide 'helm-swoop)
 ;;; helm-swoop.el ends here
