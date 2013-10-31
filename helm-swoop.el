@@ -166,6 +166,7 @@
           (incf $i)
           (insert (format "%s " $i)))
         (goto-char (point-min))
+        ;; Delete empty lines
         (while (re-search-forward "^[0-9]+\\s-*$" nil t)
           (replace-match "")))
       (setq $return (buffer-substring-no-properties (point-min) (point-max))))
@@ -189,7 +190,32 @@
                        nil t)
                   (goto-char (match-beginning 0)))
                 (recenter)))
-    (migemo)))
+;    (regexp . (lambda () helm-input))
+;    (no-matchplugin)
+;    (delayed)
+;    (requires-pattern . 2)
+;    (get-line . helm-regexp-get-line2)
+;    (multiline)
+;    (migemo)
+    ))
+
+(defun helm-regexp-get-line2 ()
+  ;; (let ((matches (match-data))
+  ;;       (line    (buffer-substring s e)))
+  ;;   (propertize
+  ;;    (loop with ln = (format "%5d: %s" (line-number-at-pos (1- s)) line)
+  ;;          for i from 0 to (1- (/ (length matches) 2))
+  ;;          concat (format "::: %s'%s'" (format "Group %d: " i)
+  ;;                         (match-string i)) into ln1
+  ;;          finally return (concat ln ln1))
+  ;;    ;; match beginning
+  ;;    ;; KLUDGE: point of helm-candidate-buffer is +1 than that of helm-current-buffer.
+  ;;    ;; It is implementation problem of candidates-in-buffer.
+  ;;    'helm-real-value (1- s)))
+  (princ "a")
+  )
+
+
 
 (defvar helm-swoop-display-tmp helm-display-function
   "To restore helm window display function")
@@ -238,7 +264,7 @@
         ;; For synchronizing line position
         (add-hook 'helm-move-selection-after-hook
                   'helm-swoop-synchronizing-position)
-        (add-hook 'helm-update-hook
+        (add-hook 'helm-update-after-hook
                   'helm-swoop-pattern-match)
         ;; Execute helm
         (helm :sources (helm-c-source-swoop)
@@ -256,6 +282,7 @@
                     ;; still not set. with prefix [C-u] (or [C-u] with number)
                     ;; ((<= 2 $prefix))
                     (t ""))
+              :prompt "Swoop: " ;; Don't change due to helm-swoop-caret-match
               :preselect
               ;; Get current line has content or else near one
               (if (string-match "^[\t\n\s]*$" $line)
@@ -270,7 +297,7 @@
     (progn
       (remove-hook 'helm-move-selection-after-hook
                    'helm-swoop-synchronizing-position)
-      (remove-hook 'helm-update-hook
+      (remove-hook 'helm-update-after-hook
                    'helm-swoop-pattern-match)
       (setq helm-display-function helm-swoop-display-tmp)
       (setq helm-swoop-first-position nil)
@@ -279,7 +306,7 @@
       (helm-swoop-delete-overlay)
       (deactivate-mark t))))
 
-;; For helm-resume
+;; For helm-resume ------------------------
 (defadvice helm-resume-select-buffer
   (around helm-swoop-if-selected-as-resume activate)
   "Resume if *Helm Swoop* buffer selected as a resume
@@ -304,6 +331,32 @@
         (let ((helm-last-buffer (cadr helm-buffers))) ad-do-it)) ;; 2 else
     ad-do-it) ;; 1 else
     )
+
+;; For caret beginning-match -----------------------------
+(defun helm-swoop-caret-match-delete ($o $aft $beg $end &optional $len)
+  (delete-region (overlay-start $o) (overlay-end $o))
+  ;; Unused argument? to avoid byte compile error
+  (if $aft (- $end $beg $len)))
+
+(defun helm-swoop-caret-match () (interactive)
+  (if (and (equal (buffer-substring-no-properties
+                   (point-min) (point-max)) "Swoop: ")
+           (eq (point) 8))
+      (progn
+        (insert "^[0-9]+.")
+        (goto-char (point-min))
+        (re-search-forward "^Swoop: \\(\\^\\[0\\-9\\]\\+\\.\\)" nil t)
+        (let (($o (make-overlay (match-beginning 1) (match-end 1))))
+          (overlay-put $o 'face 'helm-swoop-target-word-face)
+          (overlay-put $o 'display "^")
+          (overlay-put $o 'evaporate t)
+          (overlay-put $o 'modification-hooks '(helm-swoop-caret-match-delete))
+          ))
+    (insert "^")))
+
+(define-key helm-map (kbd "^") 'helm-swoop-caret-match)
+
+
 
 (provide 'helm-swoop)
 ;;; helm-swoop.el ends here
