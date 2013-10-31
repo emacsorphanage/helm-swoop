@@ -31,6 +31,7 @@
 (eval-when-compile (require 'cl))
 
 (require 'helm)
+(require 'helm-grep)
 
 (declare-function migemo-search-pattern-get "migemo")
 
@@ -154,22 +155,36 @@
 
 (defun helm-swoop-get-content ()
   "Get the whole content in buffer and add line number at the head"
-  (let (($buffer-contents
-         (buffer-substring-no-properties (point-min) (point-max)))
-        $return)
-    (with-temp-buffer
-      (insert $buffer-contents)
-      (goto-char (point-min))
-      (let (($i 1))
-        (insert (format "%s " $i))
-        (while (search-forward "\n" nil t)
-          (incf $i)
-          (insert (format "%s " $i)))
-        (goto-char (point-min))
-        (while (re-search-forward "^[0-9]+\\s-*$" nil t)
-          (replace-match "")))
-      (setq $return (buffer-substring-no-properties (point-min) (point-max))))
-    $return))
+  (let (($bufstr (buffer-substring-no-properties (point-min) (point-max))))
+    (add-text-properties
+     0 (length $bufstr)
+     `(helm-swoop-candidate t)
+     $bufstr)
+    $bufstr))
+
+(defun helm-swoop-get-line (beg end)
+  (format "%d %s"
+          (save-restriction
+            (narrow-to-region (previous-single-property-change
+                               (point) 'helm-swoop-candidate)
+                              (next-single-property-change
+                               (point) 'helm-swoop-candidate))
+            (line-number-at-pos beg))
+          (buffer-substring beg end)))
+
+(defun helm-swoop-split-line (line)
+  (when (string-match "\\`\\([0-9]+\\) +\\(.+\\)\\'" line)
+    (list (match-string 1 line) (match-string 2 line))))
+
+(defun helm-swoop-transformer (candidates source)
+  (loop for i in candidates
+        for split = (helm-swoop-split-line i)
+        for lineno = (car split)
+        for str = (nth 1 split)
+        collect (cons (concat lineno " "
+                              (helm-grep-highlight-match
+                               str helm-occur-match-plugin-mode))
+                      i)))
 
 (defun helm-c-source-swoop ()
   `((name . "Helm Swoop")
@@ -179,6 +194,9 @@
                   (insert ,(helm-swoop-get-content)))
                 (setq helm-swoop-cache t))))
     (candidates-in-buffer)
+    (filtered-candidate-transformer . helm-swoop-transformer)
+    (get-line . helm-swoop-get-line)
+    (nohighlight)
     (action . (lambda ($line)
                 (helm-swoop-goto-line
                  (when (string-match "^[0-9]+" $line)
