@@ -31,6 +31,7 @@
 (eval-when-compile (require 'cl))
 
 (require 'helm)
+(require 'helm-grep)
 
 (declare-function migemo-search-pattern-get "migemo")
 
@@ -145,6 +146,9 @@
                   ;; Optional require migemo.el & helm-migemo.el
                   (if (and (featurep 'migemo) (featurep 'helm-migemo))
                       (setq $wd (migemo-search-pattern-get $wd)))
+                  ;; For caret begging match
+                  (if (string-match "^\\^\\[0\\-9\\]\\+\\.\\(.+\\)" $wd)
+                      (setq $wd (concat "^" (match-string 1 $wd))))
 
                   (while (re-search-forward $wd nil t)
                     (setq $o (make-overlay (match-beginning 0) (match-end 0)))
@@ -171,16 +175,6 @@
           (replace-match "")))
       (setq $return (buffer-substring-no-properties (point-min) (point-max))))
     $return))
-
-(defun helm-swoop-get-line (beg end)
-  (format "%d %s"
-          (save-restriction
-            (narrow-to-region (previous-single-property-change
-                               (point) 'helm-swoop-candidate)
-                              (next-single-property-change
-                               (point) 'helm-swoop-candidate))
-            (line-number-at-pos beg))
-          (buffer-substring beg end)))
 
 (defun helm-c-source-swoop ()
   `((name . "Helm Swoop")
@@ -324,7 +318,8 @@
       (- $end $beg $len) ;; Unused argument? to avoid byte compile error
     (delete-region (overlay-start $o) (1- (overlay-end $o)))))
 
-(defun helm-swoop-caret-match () (interactive)
+(defun helm-swoop-caret-match ()
+  (interactive)
   (if (and (string-match "^Swoop: " (buffer-substring-no-properties
                                      (point-min) (point-max)) )
            (eq (point) 8))
