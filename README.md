@@ -1,10 +1,8 @@
 List the multi lines to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
 
-### Youtube
+![helm-swoop](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-swoop.gif)
 
-I don't take your time too much. Only 28 seconds. 
-
-[Youtube video here](http://www.youtube.com/embed/Mo5OSQUM51g?rel=0)
+![helm-swoop2](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-swoop2.gif)
 
 ### Feature
 
@@ -13,16 +11,19 @@ I don't take your time too much. Only 28 seconds.
 * Jumping line to line according to list buffer's move
 * Cache result until modify the buffer
 * Go back to the last line
+* Multi separated line culling
 
 It'll work fine even if 70,000 lines buffer :)
 
 ### Usage
 
-Now this has three way.
+Now helm-swoop has several ways.
 
 * `M-x helm-swoop` when region active
 * `M-x helm-swoop` when the cursor is at any symbol
 * `M-x helm-swoop` when the cursor is not at any symbol
+* `M-3 M-x helm-swoop` or `C-u 5 M-x helm-swoop` multi separated line culling
+* during isearch `M-i` to hand the word over to helm-swoop
 
 It's able to use words within region or a word at symbol as search query when it called. Also use keybind you set just type like M-i instead of `M-x helm-swoop`.
 
@@ -49,9 +50,8 @@ It's able to use words within region or a word at symbol as search query when it
 
 [helm.el](https://github.com/emacs-helm/helm)
 
-#### Optional Require
+##### Optional Require For Japanese input system.
 
-For Japanese input system.
-
-[helm-migemo.el](https://github.com/emacs-helm/helm-migemo)
+* [migemo.el](https://github.com/emacs-jp/migemo)
+* [helm-migemo.el](https://github.com/emacs-helm/helm-migemo)
 
