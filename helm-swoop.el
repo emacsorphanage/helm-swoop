@@ -44,6 +44,11 @@
   "Face for helm-swoop target line"
   :group 'helm-swoop)
 
+(defface helm-swoop-target-line-block-face
+  '((t (:background "#cccc00" :foreground "#222222")))
+  "Face for target line"
+  :group 'helm-swoop)
+
 (defface helm-swoop-target-word-face
   '((t (:background "#7700ff" :foreground "#ffffff")))
   "Face for target line"
@@ -65,6 +70,7 @@
 (defvar helm-swoop-cache)
 (defvar helm-swoop-last-point)
 (defvar helm-swoop-last-query) ;; Last search query for resume
+(defvar helm-swoop-last-prefix-number) ;; For multiline highlight
 
 (defvar helm-swoop-synchronizing-window nil
   "Window object where `helm-swoop' called from")
@@ -74,7 +80,6 @@
 
 (defvar helm-swoop-line-overlay nil
   "Overlay object to indicates other window's line")
-
 
 (defun helm-swoop-back-to-last-point ()
   (interactive)
@@ -93,7 +98,7 @@
 
 (defun helm-swoop-delete-overlay (&optional $beg $end)
   (or $beg (setq $beg (point-min)))
-  (or $end (setq $end (point-max)))
+  (or $end (setq $end (1+ (point-max))))
   (dolist ($o (overlays-in $beg $end))
     (if (overlay-get $o 'helm-swoop-target-word-face)
         (delete-overlay $o))))
@@ -105,9 +110,17 @@
 
 (defun helm-swoop-target-line-overlay ()
   "Add color to the target line"
-  (overlay-put (setq helm-swoop-line-overlay
-                     (make-overlay (point-at-bol) (point-at-eol)))
-               'face 'helm-swoop-target-line-face))
+  (overlay-put
+   (setq helm-swoop-line-overlay
+         (make-overlay (point-at-bol)
+                       ;; For multiline highlight
+                       (save-excursion
+                         (goto-char (point-at-bol))
+                         (search-forward "\n" nil t
+                                         helm-swoop-last-prefix-number))))
+   'face (if (< 1 helm-swoop-last-prefix-number)
+             'helm-swoop-target-line-block-face
+           'helm-swoop-target-line-face)))
 
 ;; core ------------------------------------------------
 
@@ -156,8 +169,9 @@
                     (overlay-put $o 'helm-swoop-target-word-face t)
                     )))))))))
 
-(defun helm-swoop-get-content ()
-  "Get the whole content in buffer and add line number at the head"
+(defun helm-swoop-get-content (&optional $linum)
+  "Get the whole content in buffer and add line number at the head.
+If $linum is number, lines are separated by $linum"
   (let (($buffer-contents
          (buffer-substring-no-properties (point-min) (point-max)))
         $return)
@@ -168,7 +182,11 @@
         (insert (format "%s " $i))
         (while (search-forward "\n" nil t)
           (incf $i)
-          (insert (format "%s " $i)))
+          (insert (format "%s " $i))
+          (when (and $linum (not (eq 0 (% $i $linum))))
+              (re-search-backward "\n" nil t)
+              ;; Special word for replace to "\n" later process
+              (replace-match "@ff@")))
         (goto-char (point-min))
         ;; Delete empty lines
         (while (re-search-forward "^[0-9]+\\s-*$" nil t)
@@ -197,6 +215,27 @@
     (migemo) ;;? in exchange for those match ^ $ [0-9] .* for now
     ))
 
+(defun helm-c-source-swoop-multiline ($linum)
+  `((name . "Helm Swoop Multiline")
+    (candidates . ,(let (($li (split-string
+                                 (helm-swoop-get-content $linum) "\n")))
+                       (mapcar (lambda ($x)
+                                  (while (string-match "@ff@" $x)
+                                    (setq $x (replace-match "\n" nil nil $x)))
+                                  $x)
+                               $li)))
+    (action . (lambda ($line)
+                (helm-swoop-goto-line
+                 (when (string-match "^[0-9]+" $line)
+                   (string-to-number (match-string 0 $line))))
+                (when (re-search-forward
+                       (mapconcat 'identity
+                                  (split-string helm-pattern " ") "\\|")
+                       nil t)
+                  (goto-char (match-beginning 0)))
+                (recenter)))
+    (multiline)))
+
 (defvar helm-swoop-display-tmp helm-display-function
   "To restore helm window display function")
 
@@ -214,9 +253,11 @@
                     isearch-string
                   (regexp-quote isearch-string))))
     (helm-swoop 0 $input)))
+;; When doing isearch, hand the word over to helm-swoop
+(define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
 
 ;;;###autoload
-(defun helm-swoop (&optional $prefix $input)
+(defun helm-swoop (&optional $multiline $input)
   (interactive "p")
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
@@ -230,6 +271,11 @@
   (setq helm-swoop-last-point (point))
   (setq helm-swoop-target-buffer (current-buffer))
   (setq helm-swoop-line-overlay (make-overlay (point-at-bol) (point-at-eol)))
+  (if (boundp 'helm-swoop-last-prefix-number)
+      (setq helm-swoop-last-prefix-number ;; $multiline is for resume
+            (or $multiline 1))
+    (set (make-local-variable 'helm-swoop-last-prefix-number)
+         (or $multiline 1)))
   ;; Cache
   (cond ((not (boundp 'helm-swoop-cache))
          (set (make-local-variable 'helm-swoop-cache) nil))
@@ -247,20 +293,24 @@
         (add-hook 'helm-update-hook
                   'helm-swoop-pattern-match)
         ;; Execute helm
-        (helm :sources (helm-c-source-swoop)
+        (helm :sources
+              (if (> helm-swoop-last-prefix-number 1)
+                  (helm-c-source-swoop-multiline helm-swoop-last-prefix-number)
+                (helm-c-source-swoop))
               :buffer "*Helm Swoop*"
               :input
-              (cond ($input $input)
+              (cond ($input
+                     (if (string-match "\\^\\[0\\-9\\]\\+\\." $input)
+                         (helm-swoop-caret-match t) ;; For resume caret
+                       $input))
                     (mark-active
                      (let (($st (buffer-substring-no-properties
                                  (region-beginning) (region-end))))
                        (if (string-match "\n" $st)
                            (message "Multi line region is not allowed")
                          $st)))
-                    ((eq 1 $prefix) ;; without [C-u] or with [C-u 1]
+                    ((thing-at-point 'symbol)
                      (thing-at-point 'symbol))
-                    ;; still not set. with prefix [C-u] (or [C-u] with number)
-                    ;; ((<= 2 $prefix))
                     (t ""))
               :prompt "Swoop: " ;; Don't change due to helm-swoop-caret-match
               :preselect
@@ -298,7 +348,7 @@
       ad-do-it))
   (when (and (equal ad-return-value "*Helm Swoop*")
              (boundp 'helm-swoop-last-query))
-    (helm-swoop 0 helm-swoop-last-query)
+    (helm-swoop helm-swoop-last-prefix-number helm-swoop-last-query)
     (setq ad-return-value nil)))
 
 (defadvice helm-resume (around helm-swoop-resume activate)
@@ -306,7 +356,7 @@
   (if (equal helm-last-buffer "*Helm Swoop*") ;; 1
       (if (boundp 'helm-swoop-last-query)  ;; 2
           (if (not (ad-get-arg 0)) ;; 3
-              (helm-swoop 0 helm-swoop-last-query))
+              (helm-swoop helm-swoop-last-prefix-number helm-swoop-last-query))
         ;; Temporary apply second last buffer
         (let ((helm-last-buffer (cadr helm-buffers))) ad-do-it)) ;; 2 else
     ad-do-it) ;; 1 else
@@ -318,13 +368,15 @@
       (- $end $beg $len) ;; Unused argument? to avoid byte compile error
     (delete-region (overlay-start $o) (1- (overlay-end $o)))))
 
-(defun helm-swoop-caret-match ()
+(defun helm-swoop-caret-match (&optional $resume)
   (interactive)
   (if (and (string-match "^Swoop: " (buffer-substring-no-properties
                                      (point-min) (point-max)) )
            (eq (point) 8))
       (progn
-        (insert "^[0-9]+.")
+        (if $resume
+            (insert )
+          (insert "^[0-9]+."))
         (goto-char (point-min))
         (re-search-forward "^Swoop: \\(\\^\\[0\\-9\\]\\+\\.\\)" nil t)
         (let (($o (make-overlay (match-beginning 1) (match-end 1))))
