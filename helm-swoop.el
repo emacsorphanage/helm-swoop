@@ -31,7 +31,6 @@
 (eval-when-compile (require 'cl))
 
 (require 'helm)
-(require 'helm-grep)
 
 (declare-function migemo-search-pattern-get "migemo")
 
@@ -62,6 +61,9 @@
     (other-window 1)
     (switch-to-buffer $buf))
   "Change the way to split window only when `helm-swoop' is calling")
+
+(defvar helm-swoop-store-scroll-margin helm-completion-window-scroll-margin
+  "To change scroll margin according to multiple line number and restore")
 
 (defvar helm-swoop-first-position nil
   "For keep line position when `helm-swoop' is called")
@@ -116,8 +118,10 @@
                        ;; For multiline highlight
                        (save-excursion
                          (goto-char (point-at-bol))
-                         (search-forward "\n" nil t
-                                         helm-swoop-last-prefix-number))))
+                         (or (search-forward "\n" nil t
+                                             helm-swoop-last-prefix-number)
+                             ;; For the end of the lines error
+                             (point-max)))))
    'face (if (< 1 helm-swoop-last-prefix-number)
              'helm-swoop-target-line-block-face
            'helm-swoop-target-line-face)))
@@ -128,7 +132,7 @@
   (with-helm-window
     (let* (($key (helm-swoop-get-string-at-line))
            ($num (when (string-match "^[0-9]+" $key)
-                    (string-to-number (match-string 0 $key)))))
+                   (string-to-number (match-string 0 $key)))))
       ;; Synchronizing line position
       (with-selected-window helm-swoop-synchronizing-window
         (if helm-swoop-first-position
@@ -138,6 +142,7 @@
                 (delete-overlay helm-swoop-line-overlay)
                 (helm-swoop-target-line-overlay))
               (recenter))
+          ;; First action when helm-swoop calling
           (move-beginning-of-line 1)
           (helm-swoop-target-line-overlay)
           (recenter)
@@ -172,11 +177,11 @@
 (defun helm-swoop-get-content (&optional $linum)
   "Get the whole content in buffer and add line number at the head.
 If $linum is number, lines are separated by $linum"
-  (let (($buffer-contents
+  (let (($bufstr
          (buffer-substring-no-properties (point-min) (point-max)))
         $return)
     (with-temp-buffer
-      (insert $buffer-contents)
+      (insert $bufstr)
       (goto-char (point-min))
       (let (($i 1))
         (insert (format "%s " $i))
@@ -234,7 +239,8 @@ If $linum is number, lines are separated by $linum"
                        nil t)
                   (goto-char (match-beginning 0)))
                 (recenter)))
-    (multiline)))
+    (multiline)
+    (migemo)))
 
 (defvar helm-swoop-display-tmp helm-display-function
   "To restore helm window display function")
@@ -276,6 +282,11 @@ If $linum is number, lines are separated by $linum"
             (or $multiline 1))
     (set (make-local-variable 'helm-swoop-last-prefix-number)
          (or $multiline 1)))
+  ;; Modify scroll tempolary
+  (when helm-display-source-at-screen-top
+    (setq helm-display-source-at-screen-top nil)
+    (setq helm-completion-window-scroll-margin
+          (+ 5 helm-swoop-last-prefix-number)))
   ;; Cache
   (cond ((not (boundp 'helm-swoop-cache))
          (set (make-local-variable 'helm-swoop-cache) nil))
@@ -300,8 +311,9 @@ If $linum is number, lines are separated by $linum"
               :buffer "*Helm Swoop*"
               :input
               (cond ($input
-                     (if (string-match "\\^\\[0\\-9\\]\\+\\." $input)
-                         (helm-swoop-caret-match t) ;; For resume caret
+                     (if (string-match
+                          "\\(\\^\\[0\\-9\\]\\+\\.\\)\\(.*\\)" $input)
+                         $input ;; NEED FIX #1 to appear as a "^"
                        $input))
                     (mark-active
                      (let (($st (buffer-substring-no-properties
@@ -323,7 +335,7 @@ If $linum is number, lines are separated by $linum"
                       (format "^%s\s" (line-number-at-pos))))
                 (format "^%s\s" (line-number-at-pos)))
               :candidate-number-limit 19999))
-    ;; Restore helm's hook and window function
+    ;; Restore helm's hook and window function etc
     (progn
       (remove-hook 'helm-move-selection-after-hook
                    'helm-swoop-synchronizing-position)
@@ -333,6 +345,10 @@ If $linum is number, lines are separated by $linum"
       (setq helm-swoop-first-position nil)
       (setq helm-swoop-last-query helm-pattern)
       (delete-overlay helm-swoop-line-overlay)
+      ;; Scroll helm buffer
+      (setq helm-display-source-at-screen-top t)
+      (setq helm-completion-window-scroll-margin
+            helm-swoop-store-scroll-margin)
       (helm-swoop-delete-overlay)
       (deactivate-mark t))))
 
@@ -370,21 +386,21 @@ If $linum is number, lines are separated by $linum"
 
 (defun helm-swoop-caret-match (&optional $resume)
   (interactive)
-  (if (and (string-match "^Swoop: " (buffer-substring-no-properties
+  (if (and (string-match "^Swoop\\:\s" (buffer-substring-no-properties
                                      (point-min) (point-max)) )
            (eq (point) 8))
       (progn
         (if $resume
-            (insert )
+            (insert $resume) ;; NEED FIX #1 to appear as a "^"
           (insert "^[0-9]+."))
         (goto-char (point-min))
-        (re-search-forward "^Swoop: \\(\\^\\[0\\-9\\]\\+\\.\\)" nil t)
+        (re-search-forward "^Swoop\\:\s\\(\\^\\[0\\-9\\]\\+\\.\\)" nil t)
         (let (($o (make-overlay (match-beginning 1) (match-end 1))))
           (overlay-put $o 'face 'helm-swoop-target-word-face)
           (overlay-put $o 'modification-hooks '(helm-swoop-caret-match-delete))
           (overlay-put $o 'display "^")
           (overlay-put $o 'evaporate t)))
-    (insert "^")))
+    (if (minibufferp) (insert "^"))))
 
 (unless (featurep 'helm-migemo)
   (define-key helm-map (kbd "^") 'helm-swoop-caret-match))
