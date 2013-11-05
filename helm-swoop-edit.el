@@ -1,3 +1,18 @@
+;;; helm-swoop-edit.el --- Efficiently hopping squeezed lines powered by helm interface -*- coding: utf-8; lexical-binding: t -*-
+
+;; Copyright (C) 2013 by Shingo Fukuyama
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of
+;; the License, or (at your option) any later version.
+
+;; This program is distributed in the hope that it will be
+;; useful, but WITHOUT ANY WARRANTY; without even the implied
+;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+;; PURPOSE.  See the GNU General Public License for more details.
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'helm)
@@ -12,6 +27,7 @@
     (erase-buffer)))
 
 (defun helm-swoop-collect--edited-lines ()
+  "Create list of edited lines with each its own line number"
   (interactive)
   (let ($list)
     (goto-char (point-min))
@@ -30,6 +46,7 @@
     $list))
 
 (defun helm-swoop--edit ($candidate)
+  "This function will only be called from `helm-swoop-edit'"
   (interactive)
   (with-current-buffer (get-buffer-create "*Helm Swoop Edit*")
     (helm-swoop-clear--edit-buffer)

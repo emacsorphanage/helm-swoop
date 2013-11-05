@@ -2,10 +2,6 @@ List the multi lines to another buffer, which is able to squeeze by any words yo
 
 ![helm-swoop](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-swoop.gif)
 
-M-4 M-x helm-swoop / C-u 4 M-x helm-swoop
-
-![helm-swoop2](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-swoop2.gif)
-
 ### Feature
 
 * Squeeze all lines in buffer with your input
@@ -29,7 +25,12 @@ Now helm-swoop has several ways.
 * During isearch `M-i` to hand the word over to helm-swoop
 * While doing `helm-swoop` press [C-c C-e] to edit mode, apply change to original buffer by [C-x C-s]
 
-It's able to use words within region or a word at symbol as search query when it called. Also use keybind you set just type like M-i instead of `M-x helm-swoop`.
+It's able to use words within region or a word at symbol as search query when it called. Also use keybind you set just type like M-i instead of `M-x helm-swoop`. 
+
+Multiline behavior 
+`M-4 M-x helm-swoop` or `C-u 4 M-x helm-swoop`
+
+![helm-swoop2](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-swoop2.gif)
 
 ### Config
 
