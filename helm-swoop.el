@@ -126,7 +126,7 @@
 
 (defun helm-swoop-delete-overlay (&optional $beg $end)
   (or $beg (setq $beg (point-min)))
-  (or $end (setq $end (1+ (point-max))))
+  (or $end (setq $end (point-max)))
   (dolist ($o (overlays-in $beg $end))
     (if (overlay-get $o 'helm-swoop-target-word-face)
         (delete-overlay $o))))
