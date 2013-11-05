@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 1.1
+;; Version: 1.2
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
@@ -26,11 +26,36 @@
 ;; cursor is jumping line to line according to moving up and down
 ;; the list.
 
+;; Example config
+;; ----------------------------------------------------------------
+;; ;; helm from https://github.com/emacs-helm/helm
+;; (require 'helm-config)
+;; (helm-mode 1)
+
+;; ;; Locate the helm-swwop folder to your path
+;; ;; This line is unnecessary if you get this program from MELPA
+;; (add-to-list 'load-path "~/.emacs.d/elisp/helm-swoop")
+
+;; (require 'helm-swoop)
+
+;; ;; Change the keybinds to whatever you like :)
+;; (global-set-key (kbd "M-i") 'helm-swoop)
+;; (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
+
+;; ;; When doing isearch, hand the word over to helm-swoop
+;; (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+;; ----------------------------------------------------------------
+
+;; Helm Swoop Edit
+;; While doing helm-swoop, press keybind [C-c C-e] to move to edit buffer.
+;; Edit the list and apply by [C-x C-s]. If you'd like to cancel, [C-c C-g]
+
 ;;; Code:
 
 (eval-when-compile (require 'cl))
 
 (require 'helm)
+(require 'helm-swoop-edit)
 
 (declare-function migemo-search-pattern-get "migemo")
 
@@ -62,6 +87,9 @@
     (switch-to-buffer $buf))
   "Change the way to split window only when `helm-swoop' is calling")
 
+(defvar helm-swoop-at-screen-top helm-display-source-at-screen-top
+  "For enable scrolling margin")
+
 (defvar helm-swoop-store-scroll-margin helm-completion-window-scroll-margin
   "To change scroll margin according to multiple line number and restore")
 
@@ -76,10 +104,8 @@
 
 (defvar helm-swoop-synchronizing-window nil
   "Window object where `helm-swoop' called from")
-
 (defvar helm-swoop-target-buffer nil
   "Buffer object where `helm-swoop' called from")
-
 (defvar helm-swoop-line-overlay nil
   "Overlay object to indicates other window's line")
 
@@ -107,28 +133,31 @@
 
 (defun helm-swoop-get-string-at-line ()
   "Get string at the line."
-  (buffer-substring-no-properties
- (point-at-bol) (point-at-eol)))
+  (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
 
 (defun helm-swoop-target-line-overlay ()
   "Add color to the target line"
   (overlay-put
    (setq helm-swoop-line-overlay
-         (make-overlay (point-at-bol)
-                       ;; For multiline highlight
-                       (save-excursion
-                         (goto-char (point-at-bol))
-                         (or (search-forward "\n" nil t
-                                             helm-swoop-last-prefix-number)
-                             ;; For the end of the lines error
-                             (point-max)))))
+         (make-overlay
+          ;; Set beginning of highlight if multiline selected
+          (progn
+            (search-backward
+             "\n" nil t (% (line-number-at-pos) helm-swoop-last-prefix-number))
+            (goto-char (point-at-bol)))
+          ;; For multiline highlight
+          (save-excursion
+            (goto-char (point-at-bol))
+            (or (search-forward "\n" nil t helm-swoop-last-prefix-number)
+                ;; For the end of the lines error
+                (point-max)))))
    'face (if (< 1 helm-swoop-last-prefix-number)
              'helm-swoop-target-line-block-face
            'helm-swoop-target-line-face)))
 
-;; core ------------------------------------------------
+;; helm action ------------------------------------------------
 
-(defun helm-swoop-synchronizing-position ()
+(defun helm-swoop--synchronizing-position ()
   (with-helm-window
     (let* (($key (helm-swoop-get-string-at-line))
            ($num (when (string-match "^[0-9]+" $key)
@@ -148,7 +177,7 @@
           (recenter)
           (setq helm-swoop-first-position t))))))
 
-(defun helm-swoop-pattern-match ()
+(defun helm-swoop--pattern-match ()
   "Overlay target words"
   (with-helm-window
     (when (< 2 (length helm-pattern))
@@ -174,7 +203,9 @@
                     (overlay-put $o 'helm-swoop-target-word-face t)
                     )))))))))
 
-(defun helm-swoop-get-content (&optional $linum)
+;; core ------------------------------------------------
+
+(defun helm-swoop--get-content (&optional $linum)
   "Get the whole content in buffer and add line number at the head.
 If $linum is number, lines are separated by $linum"
   (let (($bufstr
@@ -199,14 +230,23 @@ If $linum is number, lines are separated by $linum"
       (setq $return (buffer-substring-no-properties (point-min) (point-max))))
     $return))
 
+(defvar helm-swoop-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-c C-e") 'helm-swoop-edit)
+    (delq nil map))
+  "Keymap for helm-M-colon")
+
 (defun helm-c-source-swoop ()
   `((name . "Helm Swoop")
     (init . (lambda ()
               (unless helm-swoop-cache
                 (with-current-buffer (helm-candidate-buffer 'local)
-                  (insert ,(helm-swoop-get-content)))
+                  (insert ,(helm-swoop--get-content)))
                 (setq helm-swoop-cache t))))
     (candidates-in-buffer)
+    (keymap . ,helm-swoop-map)
+    (header-line . "[C-c C-e] Edit mode")
     (action . (lambda ($line)
                 (helm-swoop-goto-line
                  (when (string-match "^[0-9]+" $line)
@@ -223,12 +263,13 @@ If $linum is number, lines are separated by $linum"
 (defun helm-c-source-swoop-multiline ($linum)
   `((name . "Helm Swoop Multiline")
     (candidates . ,(let (($li (split-string
-                                 (helm-swoop-get-content $linum) "\n")))
+                                 (helm-swoop--get-content $linum) "\n")))
                        (mapcar (lambda ($x)
                                   (while (string-match "@ff@" $x)
                                     (setq $x (replace-match "\n" nil nil $x)))
                                   $x)
                                $li)))
+    (keymap . ,helm-swoop-map)
     (action . (lambda ($line)
                 (helm-swoop-goto-line
                  (when (string-match "^[0-9]+" $line)
@@ -246,21 +287,9 @@ If $linum is number, lines are separated by $linum"
   "To restore helm window display function")
 
 ;; Delete cache when modified file is saved
-(defun helm-swoop-clear-cache ()
+(defun helm-swoop--clear-cache ()
   (if (boundp 'helm-swoop-cache) (setq helm-swoop-cache nil)))
-(add-hook 'after-save-hook 'helm-swoop-clear-cache)
-
-;; Employ word from isearch
-;; (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
-(defun helm-swoop-from-isearch ()
-  "Invoke `helm-occur' from isearch."
-  (interactive)
-  (let (($input (if isearch-regexp
-                    isearch-string
-                  (regexp-quote isearch-string))))
-    (helm-swoop 0 $input)))
-;; When doing isearch, hand the word over to helm-swoop
-(define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+(add-hook 'after-save-hook 'helm-swoop--clear-cache)
 
 ;;;###autoload
 (defun helm-swoop (&optional $multiline $input)
@@ -277,16 +306,17 @@ If $linum is number, lines are separated by $linum"
   (setq helm-swoop-last-point (point))
   (setq helm-swoop-target-buffer (current-buffer))
   (setq helm-swoop-line-overlay (make-overlay (point-at-bol) (point-at-eol)))
+  ;; Enable scrolling margin
   (if (boundp 'helm-swoop-last-prefix-number)
-      (setq helm-swoop-last-prefix-number ;; $multiline is for resume
-            (or $multiline 1))
+      (setq helm-swoop-last-prefix-number
+            (or $multiline 1)) ;; $multiline is for resume
     (set (make-local-variable 'helm-swoop-last-prefix-number)
          (or $multiline 1)))
   ;; Modify scroll tempolary
   (when helm-display-source-at-screen-top
-    (setq helm-display-source-at-screen-top nil)
-    (setq helm-completion-window-scroll-margin
-          (+ 5 helm-swoop-last-prefix-number)))
+    (setq helm-display-source-at-screen-top nil))
+  (setq helm-completion-window-scroll-margin
+          (+ 5 helm-swoop-last-prefix-number))
   ;; Cache
   (cond ((not (boundp 'helm-swoop-cache))
          (set (make-local-variable 'helm-swoop-cache) nil))
@@ -300,9 +330,9 @@ If $linum is number, lines are separated by $linum"
         (setq helm-display-function helm-swoop-split-window-function)
         ;; For synchronizing line position
         (add-hook 'helm-move-selection-after-hook
-                  'helm-swoop-synchronizing-position)
+                  'helm-swoop--synchronizing-position)
         (add-hook 'helm-update-hook
-                  'helm-swoop-pattern-match)
+                  'helm-swoop--pattern-match)
         ;; Execute helm
         (helm :sources
               (if (> helm-swoop-last-prefix-number 1)
@@ -338,19 +368,30 @@ If $linum is number, lines are separated by $linum"
     ;; Restore helm's hook and window function etc
     (progn
       (remove-hook 'helm-move-selection-after-hook
-                   'helm-swoop-synchronizing-position)
+                   'helm-swoop--synchronizing-position)
       (remove-hook 'helm-update-hook
-                   'helm-swoop-pattern-match)
+                   'helm-swoop--pattern-match)
       (setq helm-display-function helm-swoop-display-tmp)
       (setq helm-swoop-first-position nil)
       (setq helm-swoop-last-query helm-pattern)
       (delete-overlay helm-swoop-line-overlay)
       ;; Scroll helm buffer
-      (setq helm-display-source-at-screen-top t)
+      (setq helm-display-source-at-screen-top helm-swoop-at-screen-top)
       (setq helm-completion-window-scroll-margin
             helm-swoop-store-scroll-margin)
       (helm-swoop-delete-overlay)
       (deactivate-mark t))))
+
+;; Employ word from isearch ---------------
+(defun helm-swoop-from-isearch ()
+  "Invoke `helm-swoop' from isearch."
+  (interactive)
+  (let (($input (if isearch-regexp
+                    isearch-string
+                  (regexp-quote isearch-string))))
+    (helm-swoop 0 $input)))
+;; When doing isearch, hand the word over to helm-swoop
+(define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
 
 ;; For helm-resume ------------------------
 (defadvice helm-resume-select-buffer
