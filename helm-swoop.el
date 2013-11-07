@@ -306,7 +306,8 @@ If $linum is number, lines are separated by $linum"
 
 ;; Delete cache when modified file is saved
 (defun helm-swoop--clear-cache ()
-  (if (boundp 'helm-swoop-cache) (setq helm-swoop-cache nil)))
+  (if (boundp 'helm-swoop-cache) (setq helm-swoop-cache nil))
+  (if (boundp 'helm-swoop-list-cache) (setq helm-swoop-list-cache nil)))
 (add-hook 'after-save-hook 'helm-swoop--clear-cache)
 
 ;;;###autoload
