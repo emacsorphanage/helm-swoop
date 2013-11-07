@@ -12,8 +12,6 @@ List the multi lines to another buffer, which is able to squeeze by any words yo
 * Multi separated line culling
 * Culling lines are editable
 
-It'll work fine even if 70,000 lines buffer :)
-
 ### Usage
 
 Now helm-swoop has several ways.

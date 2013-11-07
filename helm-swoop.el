@@ -98,6 +98,7 @@
 
 ;; Avoid compile error for apply buffer local variable
 (defvar helm-swoop-cache)
+(defvar helm-swoop-list-cache)
 (defvar helm-swoop-last-point)
 (defvar helm-swoop-last-query) ;; Last search query for resume
 (defvar helm-swoop-last-prefix-number) ;; For multiline highlight
@@ -134,6 +135,25 @@
 (defun helm-swoop-get-string-at-line ()
   "Get string at the line."
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
+
+(defun helm-swoop-split-lines-by ($string $regexp $step)
+  "split-string by $step for multiline"
+  (or $step (setq $step 1))
+  (let (($from1 0) ;; last match point
+        ($from2 0) ;; last substring point
+        $list
+        ($i 1)) ;; from line 1
+    (while (string-match $regexp $string $from1)
+      (setq $i (1+ $i))
+      (if (eq 0 (% $i $step))
+          (progn
+            (setq $list (cons (substring $string $from2 (match-beginning 0))
+                              $list))
+            (setq $from2 (match-end 0))
+            (setq $from1 (match-end 0)))
+        (setq $from1 (match-end 0))))
+    (setq $list (cons (substring $string $from2) $list))
+    (nreverse $list)))
 
 (defun helm-swoop-target-line-overlay ()
   "Add color to the target line"
@@ -218,15 +238,12 @@ If $linum is number, lines are separated by $linum"
         (insert (format "%s " $i))
         (while (search-forward "\n" nil t)
           (incf $i)
-          (insert (format "%s " $i))
-          (when (and $linum (not (eq 0 (% $i $linum))))
-              (re-search-backward "\n" nil t)
-              ;; Special word for replace to "\n" later process
-              (replace-match "@ff@")))
-        (goto-char (point-min))
+          (insert (format "%s " $i)))
         ;; Delete empty lines
-        (while (re-search-forward "^[0-9]+\\s-*$" nil t)
-          (replace-match "")))
+        (unless $linum
+          (goto-char (point-min))
+          (while (re-search-forward "^[0-9]+\\s-*$" nil t)
+            (replace-match ""))))
       (setq $return (buffer-substring-no-properties (point-min) (point-max))))
     $return))
 
@@ -262,13 +279,14 @@ If $linum is number, lines are separated by $linum"
 
 (defun helm-c-source-swoop-multiline ($linum)
   `((name . "Helm Swoop Multiline")
-    (candidates . ,(let (($li (split-string
-                                 (helm-swoop--get-content $linum) "\n")))
-                       (mapcar (lambda ($x)
-                                  (while (string-match "@ff@" $x)
-                                    (setq $x (replace-match "\n" nil nil $x)))
-                                  $x)
-                               $li)))
+    (candidates . ,(if helm-swoop-list-cache
+                       (progn
+                         (helm-swoop-split-lines-by
+                          helm-swoop-list-cache "\n" $linum))
+                     (helm-swoop-split-lines-by
+                      (setq helm-swoop-list-cache
+                            (helm-swoop--get-content t))
+                      "\n" $linum)))
     (keymap . ,helm-swoop-map)
     (action . (lambda ($line)
                 (helm-swoop-goto-line
@@ -320,10 +338,13 @@ If $linum is number, lines are separated by $linum"
   ;; Cache
   (cond ((not (boundp 'helm-swoop-cache))
          (set (make-local-variable 'helm-swoop-cache) nil))
-        ((not helm-swoop-cache)
-         (setq helm-swoop-cache nil))
         ((buffer-modified-p)
          (setq helm-swoop-cache nil)))
+  ;; Cache for multiline
+  (cond ((not (boundp 'helm-swoop-list-cache))
+         (set (make-local-variable 'helm-swoop-list-cache) nil))
+        ((buffer-modified-p)
+         (setq helm-swoop-list-cache nil)))
   (unwind-protect
       (let (($line (helm-swoop-get-string-at-line)))
         ;; Modify window split function temporary
