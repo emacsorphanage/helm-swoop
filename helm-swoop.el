@@ -110,6 +110,22 @@
 (defvar helm-swoop-line-overlay nil
   "Overlay object to indicates other window's line")
 
+(defsubst helm-swoop-goto-line ($line)
+  (goto-char (point-min))
+  (unless (search-forward "\n" nil t (1- $line))
+    (goto-char (point-max))))
+
+(defsubst helm-swoop-delete-overlay (&optional $beg $end)
+  (or $beg (setq $beg (point-min)))
+  (or $end (setq $end (point-max)))
+  (dolist ($o (overlays-in $beg $end))
+    (if (overlay-get $o 'helm-swoop-target-word-face)
+        (delete-overlay $o))))
+
+(defsubst helm-swoop-get-string-at-line ()
+  "Get string at the line."
+  (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
+
 (defun helm-swoop-back-to-last-point ()
   (interactive)
   "Go back to last position where `helm-swoop' was called"
@@ -119,22 +135,6 @@
       (goto-char helm-swoop-last-point)
       (setq helm-swoop-last-point $po)))
   (message "There is no last point. Use this again after `helm-swoop' call"))
-
-(defun helm-swoop-goto-line ($line)
-  (goto-char (point-min))
-  (unless (search-forward "\n" nil t (1- $line))
-    (goto-char (point-max))))
-
-(defun helm-swoop-delete-overlay (&optional $beg $end)
-  (or $beg (setq $beg (point-min)))
-  (or $end (setq $end (point-max)))
-  (dolist ($o (overlays-in $beg $end))
-    (if (overlay-get $o 'helm-swoop-target-word-face)
-        (delete-overlay $o))))
-
-(defun helm-swoop-get-string-at-line ()
-  "Get string at the line."
-  (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
 
 (defun helm-swoop-split-lines-by ($string $regexp $step)
   "split-string by $step for multiline"
@@ -411,7 +411,7 @@ If $linum is number, lines are separated by $linum"
   (let (($input (if isearch-regexp
                     isearch-string
                   (regexp-quote isearch-string))))
-    (helm-swoop 0 $input)))
+    (helm-swoop nil $input)))
 ;; When doing isearch, hand the word over to helm-swoop
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
 
