@@ -93,9 +93,6 @@
 (defvar helm-swoop-store-scroll-margin helm-completion-window-scroll-margin
   "To change scroll margin according to multiple line number and restore")
 
-(defvar helm-swoop-first-position nil
-  "For keep line position when `helm-swoop' is called")
-
 ;; Avoid compile error to apply buffer local variable
 (defvar helm-swoop-cache)
 (defvar helm-swoop-list-cache)
@@ -177,11 +174,11 @@
 
 ;; helm action ------------------------------------------------
 
-(defadvice helm-next-line (around helm-swoop-next-line)
+(defadvice helm-next-line (around helm-swoop-next-line disable)
   ad-do-it
   (when (called-interactively-p 'any)
     (helm-swoop--move-line-action)))
-(defadvice helm-previous-line (around helm-swoop-previous-line)
+(defadvice helm-previous-line (around helm-swoop-previous-line disable)
   ad-do-it
   (when (called-interactively-p 'any)
     (helm-swoop--move-line-action)))
@@ -404,7 +401,6 @@ If $linum is number, lines are separated by $linum"
       (ad-activate 'helm-previous-line)
       (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
       (setq helm-display-function helm-swoop-display-tmp)
-      (setq helm-swoop-first-position nil)
       (setq helm-swoop-last-query helm-pattern)
       (delete-overlay helm-swoop-line-overlay)
       ;; Scroll helm buffer
