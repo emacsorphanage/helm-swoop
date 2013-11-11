@@ -27,7 +27,7 @@
     (erase-buffer)))
 
 (defun helm-swoop-collect--edited-lines ()
-  "Create list of edited lines with each its own line number"
+  "Create a list of edited lines with each its own line number"
   (interactive)
   (let ($list)
     (goto-char (point-min))
@@ -51,7 +51,7 @@
   (with-current-buffer (get-buffer-create "*Helm Swoop Edit*")
     (helm-swoop-clear--edit-buffer)
     (let ($bufstr)
-      ;; Get target line number for edit
+      ;; Get target line number to edit
       (with-current-buffer "*Helm Swoop*"
         (setq $bufstr (buffer-substring-no-properties
                        (point-min) (point-max))))
@@ -112,7 +112,7 @@
                  (insert $v)))))
     (select-window helm-swoop-synchronizing-window)
     (kill-buffer (get-buffer "*Helm Swoop Edit*")))
-  ;; Remain overlay problem ?
+  ;; Remain overlay problem?
   (helm-swoop-delete-overlay)
   (message "Successfully helm-swoop-edit applied to original buffer"))
 
@@ -121,7 +121,7 @@
   (interactive)
   (select-window helm-swoop-synchronizing-window)
   (kill-buffer (get-buffer "*Helm Swoop Edit*"))
-  ;; Remain overlay problem ?
+  ;; Remain overlay problem?
   (helm-swoop-delete-overlay)
   (message "helm-swoop-edit canceled"))
 
