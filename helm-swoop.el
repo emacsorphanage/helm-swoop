@@ -395,6 +395,8 @@ If $linum is number, lines are separated by $linum"
               :candidate-number-limit 19999))
     ;; Restore helm's hook and window function etc
     (progn
+      (when (= 1 helm-exit-status)
+        (helm-swoop-back-to-last-point))
       (ad-disable-advice 'helm-next-line 'around 'helm-swoop-next-line)
       (ad-activate 'helm-next-line)
       (ad-disable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
