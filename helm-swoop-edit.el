@@ -17,6 +17,12 @@
 (eval-when-compile (require 'cl))
 (require 'helm)
 
+(defvar helm-swoop-edit-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-x C-s") 'helm-swoop--edit-complete)
+    (define-key map (kbd "C-c C-g") 'helm-swoop--edit-cancel)
+    map))
+
 (defun helm-swoop-clear--edit-buffer ()
   (let ((inhibit-read-only t))
     (dolist ($ov (overlays-in (point-min) (point-max)))
@@ -94,8 +100,7 @@
   (if (string-match "^[0-9]+" $candidate)
       (re-search-forward
        (concat "^" (match-string 0 $candidate)) nil t))
-  (local-set-key (kbd "C-x C-s") 'helm-swoop--edit-complete)
-  (local-set-key (kbd "C-c C-g") 'helm-swoop--edit-cancel))
+  (use-local-map helm-swoop-edit-map))
 
 (defun helm-swoop--edit-complete ()
   "Apply changes and kill temporary edit buffer"
