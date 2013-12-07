@@ -56,11 +56,21 @@
   (interactive)
   (with-current-buffer (get-buffer-create "*Helm Swoop Edit*")
     (helm-swoop-clear--edit-buffer)
-    (let ($bufstr)
+    (let (($bufstr ""))
       ;; Get target line number to edit
       (with-current-buffer "*Helm Swoop*"
-        (setq $bufstr (buffer-substring-no-properties
-                       (point-min) (point-max))))
+        ;; Use selected line by [C-SPC] or [M-SPC]
+        (dolist ($ov (overlays-in (point-min) (point-max)))
+          (when (eq 'helm-visible-mark (overlay-get $ov 'face))
+            (setq $bufstr (concat (buffer-substring-no-properties
+                                   (overlay-start $ov) (overlay-end $ov))
+                                  $bufstr))))
+        (if (equal "" $bufstr)
+            ;; Not found selected line
+            (setq $bufstr (buffer-substring-no-properties
+                           (point-min) (point-max)))
+          ;; Attach title
+          (setq $bufstr (concat "Helm Swoop\n" $bufstr))))
 
       ;; Set for edit buffer
       (insert $bufstr)
