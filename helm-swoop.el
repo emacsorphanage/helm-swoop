@@ -123,6 +123,10 @@
   "Get string of line."
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
 
+(defsubst helm-swoop-thing-at-point ()
+  "For fix wrong-type-argument stringp error"
+  (substring-no-properties (or (thing-at-point 'symbol) "")))
+
 (defun helm-swoop-back-to-last-point ()
   (interactive)
   "Go back to last position where `helm-swoop' was called"
@@ -368,8 +372,8 @@ If $linum is number, lines are separated by $linum"
                  (if (string-match "\n" $st)
                      (message "Multi line region is not allowed")
                    (setq $input $st))))
-              ((thing-at-point 'symbol)
-               (setq $input (thing-at-point 'symbol)))
+              ((helm-swoop-thing-at-point)
+               (setq $input (helm-swoop-thing-at-point)))
               (t (setq $input "")))
         ;; First behavior
         (recenter)
