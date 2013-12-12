@@ -127,6 +127,7 @@
   "For fix wrong-type-argument stringp error"
   (substring-no-properties (or (thing-at-point 'symbol) "")))
 
+;;;###autoload
 (defun helm-swoop-back-to-last-point ()
   (interactive)
   "Go back to last position where `helm-swoop' was called"
@@ -417,6 +418,7 @@ If $linum is number, lines are separated by $linum"
       (deactivate-mark t))))
 
 ;; Employ word from isearch ---------------
+;;;###autoload
 (defun helm-swoop-from-isearch ()
   "Invoke `helm-swoop' from isearch."
   (interactive)
