@@ -40,9 +40,8 @@ Apply changes to original buffer type `C-x C-s`.
 ```elisp
 ;; helm from https://github.com/emacs-helm/helm
 (require 'helm-config)
-(helm-mode 1)
 
-;; Locate the helm-swwop folder to your path
+;; Locate the helm-swoop folder to your path
 (add-to-list 'load-path "~/.emacs.d/elisp/helm-swoop")
 (require 'helm-swoop)
 

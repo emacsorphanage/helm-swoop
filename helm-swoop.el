@@ -30,7 +30,6 @@
 ;; ----------------------------------------------------------------
 ;; ;; helm from https://github.com/emacs-helm/helm
 ;; (require 'helm-config)
-;; (helm-mode 1)
 
 ;; ;; Locate the helm-swoop folder to your path
 ;; ;; This line is unnecessary if you get this program from MELPA
