@@ -17,6 +17,8 @@
 (eval-when-compile (require 'cl))
 (require 'helm)
 
+(defvar helm-swoop-edit-target-buffer)
+
 (defvar helm-swoop-edit-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-x C-s") 'helm-swoop--edit-complete)
@@ -54,6 +56,7 @@
 (defun helm-swoop--edit ($candidate)
   "This function will only be called from `helm-swoop-edit'"
   (interactive)
+  (setq helm-swoop-edit-target-buffer helm-swoop-target-buffer)
   (with-current-buffer (get-buffer-create "*Helm Swoop Edit*")
     (helm-swoop-clear--edit-buffer)
     (let (($bufstr ""))
@@ -116,7 +119,7 @@
   "Apply changes and kill temporary edit buffer"
   (interactive)
   (let (($list (helm-swoop-collect--edited-lines)))
-    (with-current-buffer helm-swoop-target-buffer
+    (with-current-buffer helm-swoop-edit-target-buffer
       ;; Replace from the end of buffer
       (save-excursion
       (loop for ($k . $v) in $list

@@ -253,10 +253,10 @@ If $linum is number, lines are separated by $linum"
     $return))
 
 (defvar helm-swoop-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map helm-map)
-    (define-key map (kbd "C-c C-e") 'helm-swoop-edit)
-    (delq nil map))
+  (let (($map (make-sparse-keymap)))
+    (set-keymap-parent $map helm-map)
+    (define-key $map (kbd "C-c C-e") 'helm-swoop-edit)
+    (delq nil $map))
   "Keymap for helm-M-colon")
 
 (defun helm-c-source-swoop ()
