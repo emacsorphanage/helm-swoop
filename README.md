@@ -20,8 +20,8 @@ List the multi lines to another buffer, which is able to squeeze by any words yo
 * `M-x helm-swoop` when the cursor is at any symbol
 * `M-x helm-swoop` when the cursor is not at any symbol
 * `M-3 M-x helm-swoop` or `C-u 5 M-x helm-swoop` multi separated line culling
-* `M-x helm-multi-swoop` multi-occur like feature.
-* `C-u M-x helm-multi-swoop` apply last selected buffers from the second time.
+* `M-x helm-multi-swoop` multi-occur like feature
+* `C-u M-x helm-multi-swoop` apply last selected buffers from the second time
 * During isearch `M-i` to hand the word over to helm-swoop
 * While doing `helm-swoop` press `C-c C-e` to edit mode, apply changes to original buffer by `C-x C-s`
 
@@ -33,9 +33,11 @@ Before enter the edit mode, you can choose some lines marked by `C-SPC` or `M-SP
 Apply changes to original buffer type `C-x C-s`.
 
 #### Across multiple buffers
+
 ##### `M-x helm-multi-swoop`
 1. Select any buffers by [C-SPC] or [M-SPC]
 2. Press [RET] to start helm-multi-swoop
+
 ##### `C-u M-x helm-multi-swoop`
 Skip select phase if you have done helm-multi-swoop before.
 
