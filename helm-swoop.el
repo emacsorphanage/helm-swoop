@@ -478,6 +478,7 @@ If $linum is number, lines are separated by $linum"
     (delete-region (overlay-start $o) (1- (overlay-end $o)))))
 
 (defun helm-swoop-caret-match (&optional $resume)
+
   (interactive)
   (if (and (string-match "^Swoop\\:\s" ;; depend on helm-swoop-prompt
                          (buffer-substring-no-properties
