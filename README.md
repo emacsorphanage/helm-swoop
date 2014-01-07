@@ -38,6 +38,8 @@ Apply changes to original buffer type `C-x C-s`.
 1. Select any buffers by [C-SPC] or [M-SPC]
 2. Press [RET] to start helm-multi-swoop
 
+![helm-multi-swoop](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-multi-swoop.gif)
+
 ##### `C-u M-x helm-multi-swoop`
 Skip select phase if you have done helm-multi-swoop before.
 
