@@ -54,12 +54,14 @@
                                    (overlay-start $ov) (overlay-end $ov))
                                   $bufstr)))
           (when (eq 'helm-visible-mark (overlay-get $ov 'face))
-            (setq $mark t)
-            (setq $bufstr (concat (buffer-substring
-                                   (overlay-start $ov) (overlay-end $ov))
-                                  $bufstr))))
+            (let (($str (buffer-substring (overlay-start $ov) (overlay-end $ov))))
+              (unless (equal "" $str) (setq $mark t))
+              (setq $bufstr (concat (buffer-substring
+                                     (overlay-start $ov) (overlay-end $ov))
+                                    $bufstr)))))
         (if $mark
-            (setq $bufstr (concat "Helm Multi Swoop\n" $bufstr))
+            (progn (setq $bufstr (concat "Helm Multi Swoop\n" $bufstr))
+                   (setq $mark nil))
           (setq $bufstr (concat "Helm Multi Swoop\n"
                                 (buffer-substring
                                  (point-min) (point-max))))))
