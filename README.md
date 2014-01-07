@@ -21,6 +21,7 @@ List the multi lines to another buffer, which is able to squeeze by any words yo
 * `M-x helm-swoop` when the cursor is not at any symbol
 * `M-3 M-x helm-swoop` or `C-u 5 M-x helm-swoop` multi separated line culling
 * `M-x helm-multi-swoop` multi-occur like feature
+* `M-x helm-multi-swoop-all` apply all buffers
 * `C-u M-x helm-multi-swoop` apply last selected buffers from the second time
 * During isearch `M-i` to hand the word over to helm-swoop
 * While doing `helm-swoop` press `C-c C-e` to edit mode, apply changes to original buffer by `C-x C-s`
@@ -40,8 +41,11 @@ Apply changes to original buffer type `C-x C-s`.
 
 ![helm-multi-swoop](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-multi-swoop.gif)
 
+##### `M-x helm-multi-swoop-all`
+Skip select phase and apply all buffers.
+
 ##### `C-u M-x helm-multi-swoop`
-Skip select phase if you have done helm-multi-swoop before.
+Skip select phase and apply last selected buffers, if you have done helm-multi-swoop before.
 
 
 #### Multiline behavior 
@@ -63,6 +67,7 @@ Skip select phase if you have done helm-multi-swoop before.
 (global-set-key (kbd "M-i") 'helm-swoop)
 (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
 (global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
+(global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
 
 ;; When doing isearch, hand the word over to helm-swoop
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
