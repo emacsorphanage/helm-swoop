@@ -190,32 +190,32 @@
                   (helm-swoop--delete-overlay 'target-buffer)))
               $buffs)))))
 
-(defun helm-c-source-helm-multi-swoop-buffers ()
+(defun helm-multi-swoop--get-buffer-list ()
+  (let ($buflist1 $buflist2)
+    ;; eliminate buffers start with whitespace
+    (mapcar (lambda ($buf)
+              (setq $buf (buffer-name $buf))
+              (unless (string-match "^\\s-" $buf)
+                (setq $buflist1 (cons $buf $buflist1))))
+            (buffer-list))
+    ;; eliminate buffers match pattern
+    (mapcar (lambda ($buf)
+              (unless (string-match
+                       helm-multi-swoop-ignore-buffers-match
+                       $buf)
+                (setq $buflist2 (cons $buf $buflist2))))
+            $buflist1)
+    $buflist2))
 
+(defun helm-c-source-helm-multi-swoop-buffers ()
   "Show buffer list to select"
   `((name . "helm-multi-swoop select buffers")
-    (candidates . (lambda ()
-                    (let ($buflist1 $buflist2)
-                      ;; eliminate buffers start with whitespace
-                      (mapcar (lambda ($buf)
-                                (setq $buf (buffer-name $buf))
-                                (unless (string-match "^\\s-" $buf)
-                                  (setq $buflist1 (cons $buf $buflist1))))
-                              (buffer-list))
-                      ;; eliminate buffers match pattern
-                      (mapcar (lambda ($buf)
-                                (unless (string-match
-                                         helm-multi-swoop-ignore-buffers-match
-                                         $buf)
-                                  (setq $buflist2 (cons $buf $buflist2))))
-                              $buflist1)
-                      $buflist2)))
+    (candidates . helm-multi-swoop--get-buffer-list)
     (header-line . "[C-SPC]/[M-SPC] select, [RET] next step")
     (keymap . ,helm-multi-swoop-buffers-map)))
 
 ;;;###autoload
 (defun helm-multi-swoop (&optional $query $buffer-list)
-
   (interactive)
   "\
 Usage:
@@ -245,6 +245,24 @@ Last selected buffers will be applied to helm-multi-swoop.
       (helm :sources (helm-c-source-helm-multi-swoop-buffers)
             :buffer helm-multi-swoop-buffer-list
             :prompt "Mark any buffers by [C-SPC] or [M-SPC]: "))))
+
+(defun helm-multi-swoop-all (&optional $query)
+  (interactive)
+  "Apply all buffers"
+  (cond ($query
+         (setq helm-multi-swoop-query $query))
+        (mark-active
+         (let (($st (buffer-substring-no-properties
+                     (region-beginning) (region-end))))
+           (if (string-match "\n" $st)
+               (message "Multi line region is not allowed")
+             (setq helm-multi-swoop-query $st))))
+        ((helm-swoop--thing-at-point)
+         (setq helm-multi-swoop-query (helm-swoop--thing-at-point)))
+        (t (setq helm-multi-swoop-query "")))
+  (helm-multi-swoop--exec nil
+                          helm-multi-swoop-query
+                          (helm-multi-swoop--get-buffer-list)))
 
 ;; option -------------------------------------------------------
 
