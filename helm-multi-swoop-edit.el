@@ -34,23 +34,35 @@
   (helm-swoop--delete-overlay 'target-buffer)
   (with-current-buffer (get-buffer-create helm-multi-swoop-edit-buffer)
     (helm-swoop--clear-edit-buffer 'helm-multi-swoop-edit)
-    (let (($bufstr ""))
+    (let (($bufstr "") ($mark nil))
       ;; Get target line number to edit
       (with-current-buffer helm-multi-swoop-buffer
+        ;; Set overlay to helm-source-header for editing marked lines
+        (save-excursion
+          (goto-char (point-min))
+          (let (($beg (point)) $end)
+            (while (setq $beg (text-property-any $beg (point-max)
+                                              'face 'helm-source-header))
+              (setq $end (next-single-property-change $beg 'face))
+              (overlay-put (make-overlay $beg $end) 'source-header t)
+              (setq $beg $end)
+              (goto-char $end))))
         ;; Use selected line by [C-SPC] or [M-SPC]
         (dolist ($ov (overlays-in (point-min) (point-max)))
+          (when (overlay-get $ov 'source-header)
+            (setq $bufstr (concat (buffer-substring
+                                   (overlay-start $ov) (overlay-end $ov))
+                                  $bufstr)))
           (when (eq 'helm-visible-mark (overlay-get $ov 'face))
+            (setq $mark t)
             (setq $bufstr (concat (buffer-substring
                                    (overlay-start $ov) (overlay-end $ov))
                                   $bufstr))))
-        (if (equal "" $bufstr)
-            ;; Not found selected line
-            (setq $bufstr (concat "Helm Multi Swoop\n"
-                                  (buffer-substring
-                                   (point-min) (point-max))))
-          ;; Attach title
-          (setq $bufstr (concat "Helm Multi Swoop\n" $bufstr))))
-
+        (if $mark
+            (setq $bufstr (concat "Helm Multi Swoop\n" $bufstr))
+          (setq $bufstr (concat "Helm Multi Swoop\n"
+                                (buffer-substring
+                                 (point-min) (point-max))))))
 
       ;; Set for edit buffer
       (insert $bufstr)
@@ -72,8 +84,7 @@
           (let* (($bol1 (match-beginning 1))
                  ($eol1 (match-end 1))
                  ($bol2 (match-beginning 2))
-                 ($eol2 (match-end 2))
-                 ($editable-line (buffer-substring $bol2 $eol2)))
+                 ($eol2 (match-end 2)))
 
             ;; Line number
             (add-text-properties $bol1 $eol1

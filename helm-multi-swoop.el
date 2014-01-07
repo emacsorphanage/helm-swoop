@@ -159,16 +159,6 @@
                 (make-overlay (point) (point)))
           (overlay-put helm-swoop-line-overlay
                        'face 'helm-swoop-target-line-face)
-          ;; (overlay-put
-          ;;  (setq helm-swoop-line-overlay
-          ;;        (make-overlay
-          ;;         (goto-char (point-at-bol))
-          ;;         (save-excursion
-          ;;           (goto-char (point-at-bol))
-          ;;           (or (search-forward "\n" nil t)
-          ;;               (point-max)))))
-          ;;  'face 'helm-swoop-target-line-face)
-          ;; Modify window split function temporarily
           (setq helm-display-function helm-swoop-split-window-function)
           (unless (boundp 'helm-swoop-last-query)
             (set (make-local-variable 'helm-swoop-last-query) ""))
@@ -201,6 +191,7 @@
               $buffs)))))
 
 (defun helm-c-source-helm-multi-swoop-buffers ()
+
   "Show buffer list to select"
   `((name . "helm-multi-swoop select buffers")
     (candidates . (lambda ()
@@ -224,6 +215,7 @@
 
 ;;;###autoload
 (defun helm-multi-swoop (&optional $query $buffer-list)
+
   (interactive)
   "\
 Usage:

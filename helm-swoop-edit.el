@@ -98,8 +98,7 @@
           (let* (($bol1 (match-beginning 1))
                  ($eol1 (match-end 1))
                  ($bol2 (match-beginning 2))
-                 ($eol2 (match-end 2))
-                 ($editable-line (buffer-substring-no-properties $bol2 $eol2)))
+                 ($eol2 (match-end 2)))
 
             ;; Line number
             (add-text-properties $bol1 $eol1
