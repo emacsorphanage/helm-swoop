@@ -114,7 +114,10 @@
     (save-excursion
       (goto-char (point-min))
       (while (setq $end (next-single-property-change (point) $property))
-        (setq $list (cons (buffer-substring-no-properties (point) $end)
+        ;; Must eliminate last return because of unexpected edit result
+        (setq $list (cons (replace-regexp-in-string
+                           "\n\\'" ""
+                           (buffer-substring-no-properties (point) $end))
                           $list))
         (goto-char $end))
       (setq $list (cons (buffer-substring-no-properties (point) (point-max))
@@ -156,22 +159,28 @@
 (defun helm-multi-swoop--edit-complete ()
   "Apply changes to buffers and kill temporary edit buffer"
   (interactive)
-  (let (($list (helm-multi-swoop--collect-edited-lines)))
+  (let (($list (helm-multi-swoop--collect-edited-lines))
+        $read-only)
     (mapc (lambda ($x)
             (with-current-buffer (car $x)
-              (save-excursion
-                (loop for ($k . $v) in (cdr $x)
-                      do (progn
-                           (goto-char (point-min))
-                           (delete-region (point-at-bol $k) (point-at-eol $k))
-                           (goto-char (point-at-bol $k))
-                           (insert $v))))
+              (unless buffer-read-only
+                (save-excursion
+                  (loop for ($k . $v) in (cdr $x)
+                        do (progn
+                             (goto-char (point-min))
+                             (delete-region (point-at-bol $k) (point-at-eol $k))
+                             (goto-char (point-at-bol $k))
+                             (insert $v)))))
               (if helm-multi-swoop-edit-save
-                  (save-buffer))))
+                  (if buffer-read-only
+                      (setq $read-only t)
+                    (save-buffer)))))
           $list)
     (select-window helm-swoop-synchronizing-window)
-    (kill-buffer (get-buffer helm-multi-swoop-edit-buffer)))
-  (message "Successfully helm-multi-swoop-edit applied to original buffer"))
+    (kill-buffer (get-buffer helm-multi-swoop-edit-buffer))
+    (if $read-only
+        (message "Couldn't save some buffers because of read-only")
+      (message "Successfully helm-multi-swoop-edit applied to original buffer"))))
 
 (defun helm-multi-swoop--edit-cancel ()
   "Cancel edit and kill temporary buffer"
