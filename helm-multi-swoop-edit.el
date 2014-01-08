@@ -30,7 +30,6 @@
 (defun helm-multi-swoop--edit ($candidate)
   "This function will only be called from `helm-swoop-edit'"
   (interactive)
-  (setq helm-swoop-edit-target-buffer helm-swoop-target-buffer)
   (helm-swoop--delete-overlay 'target-buffer)
   (with-current-buffer (get-buffer-create helm-multi-swoop-edit-buffer)
     (helm-swoop--clear-edit-buffer 'helm-multi-swoop-edit)
