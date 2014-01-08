@@ -4,7 +4,7 @@ List the multi lines to another buffer, which is able to squeeze by any words yo
 
 ### Feature
 
-* Squeeze all lines in buffer with your input
+* Culling all lines in buffer with your input
 * Highlight multiple matched pattern
 * Jumping line to line according to list buffer's move
 * Cache result until modifies the buffer
@@ -24,6 +24,7 @@ List the multi lines to another buffer, which is able to squeeze by any words yo
 * `M-x helm-multi-swoop-all` apply all buffers
 * `C-u M-x helm-multi-swoop` apply last selected buffers from the second time
 * During isearch `M-i` to hand the word over to helm-swoop
+* During isearch `M-i` to hand the word over to helm-multi-swoop-all
 * While doing `helm-swoop` press `C-c C-e` to edit mode, apply changes to original buffer by `C-x C-s`
 
 It's able to use words within a region or a word at symbol as search query when it called. Also use a keybind you set just type like M-i instead of `M-x helm-swoop`. 
@@ -71,7 +72,7 @@ Skip select phase and apply last selected buffers, if you have done helm-multi-s
 
 ;; When doing isearch, hand the word over to helm-swoop
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
-(define-key isearch-mode-map (kbd "C-x M-i") 'helm-multi-swoop-all-from-isearch)
+(define-key isearch-mode-map (kbd "M-i") 'helm-multi-swoop-all-from-isearch)
 
 ;; Save buffer when helm-multi-swoop-edit complete
 (setq helm-multi-swoop-edit-save t)
