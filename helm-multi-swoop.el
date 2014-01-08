@@ -266,6 +266,16 @@ Last selected buffers will be applied to helm-multi-swoop.
 
 ;; option -------------------------------------------------------
 
+(defun helm-multi-swoop-all-from-isearch ()
+  "Invoke `helm-swoop' from isearch."
+  (interactive)
+  (let (($input (if isearch-regexp
+                    isearch-string
+                  (regexp-quote isearch-string))))
+    (helm-multi-swoop-all $input)))
+;; When doing isearch, hand the word over to helm-swoop
+(define-key isearch-mode-map (kbd "C-x M-i") 'helm-multi-swoop-all-from-isearch)
+
 (defadvice helm-resume (around helm-multi-swoop-resume activate)
   "Resume if the last used helm buffer is *Helm Swoop*"
   (if (equal helm-last-buffer helm-multi-swoop-buffer)
