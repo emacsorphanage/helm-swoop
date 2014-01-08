@@ -208,11 +208,12 @@
 
 (defun helm-multi-swoop--get-buffer-list ()
   (let ($buflist1 $buflist2)
-    ;; eliminate buffers start with whitespace
+    ;; eliminate buffers start with whitespace and dired buffers
     (mapc (lambda ($buf)
             (setq $buf (buffer-name $buf))
             (unless (string-match "^\\s-" $buf)
-              (setq $buflist1 (cons $buf $buflist1))))
+              (unless (eq 'dired-mode (with-current-buffer $buf major-mode))
+                (setq $buflist1 (cons $buf $buflist1)))))
           (buffer-list))
     ;; eliminate buffers match pattern
     (mapc (lambda ($buf)
