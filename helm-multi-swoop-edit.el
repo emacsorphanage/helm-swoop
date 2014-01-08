@@ -115,10 +115,12 @@
       (goto-char (point-min))
       (while (setq $end (next-single-property-change (point) $property))
         ;; Must eliminate last return because of unexpected edit result
-        (setq $list (cons (replace-regexp-in-string
-                           "\n\\'" ""
-                           (buffer-substring-no-properties (point) $end))
-                          $list))
+        (setq $list (cons
+                     (let (($str (buffer-substring-no-properties (point) $end)))
+                       (if (string-match "\n\n\\'" $str)
+                           (replace-regexp-in-string "\n\\'" "" $str)
+                         $str))
+                     $list))
         (goto-char $end))
       (setq $list (cons (buffer-substring-no-properties (point) (point-max))
                         $list)))
