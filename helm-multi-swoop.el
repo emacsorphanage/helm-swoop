@@ -301,7 +301,7 @@ Last selected buffers will be applied to helm-multi-swoop.
   (delete-overlay helm-swoop-line-overlay)
   (setq helm-multi-swoop-all-from-helm-swoop-last-point helm-swoop-last-point)
   (helm-quit-and-execute-action
-   (lambda ($c) (helm-multi-swoop-all helm-swoop-last-query))))
+   (lambda ($c) (helm-multi-swoop-all helm-pattern))))
 
 (defadvice helm-resume (around helm-multi-swoop-resume activate)
   "Resume if the last used helm buffer is *Helm Swoop*"
