@@ -45,6 +45,7 @@
 
 ;; ;; When doing isearch, hand the word over to helm-swoop
 ;; (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+;; (define-key isearch-mode-map (kbd "C-x M-i") 'helm-multi-swoop-all-from-isearch)
 
 ;; ;; Save buffer when helm-multi-swoop-edit complete
 ;; (setq helm-multi-swoop-edit-save t)
