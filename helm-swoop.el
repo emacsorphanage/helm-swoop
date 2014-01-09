@@ -84,11 +84,23 @@
   "Face for target line"
   :group 'helm-swoop)
 
+(defcustom helm-swoop-split-with-multiple-windows nil
+ "Split window when having multiple windows open"
+ :group 'helm-swoop
+ :type 'boolean)
+
+(defcustom helm-swoop-split-direction 'split-window-vertically
+ "Split direction"
+ :type '(choice (const :tag "vertically"   split-window-vertically)
+                (const :tag "horizontally" split-window-horizontally))
+ :group 'helm-swoop)
+
 (defvar helm-swoop-split-window-function
   (lambda ($buf)
-    (when (one-window-p)
-      ;;(split-window-horizontally)
-      (split-window-vertically))
+   (if helm-swoop-split-with-multiple-windows
+       (funcall helm-swoop-split-direction)
+       (when (one-window-p)
+        (funcall helm-swoop-split-direction)))
     (other-window 1)
     (switch-to-buffer $buf))
   "Change the way to split window only when `helm-swoop' is calling")
