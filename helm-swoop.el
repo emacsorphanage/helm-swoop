@@ -85,7 +85,7 @@
   :group 'helm-swoop)
 
 (defcustom split-with-multiple-windows nil
- "Split vertically when having multiple windows open"
+ "Split window when having multiple windows open"
  :group 'helm-swoop
  :type 'boolean)
 
