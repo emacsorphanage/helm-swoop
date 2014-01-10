@@ -47,12 +47,14 @@
 ;; action -----------------------------------------------------
 
 (defadvice helm-next-line (around helm-multi-swoop-next-line disable)
-  ad-do-it
+  (interactive)
+  (helm-move-selection-common :where 'line :direction 'next)
   (when (called-interactively-p 'any)
     (helm-multi-swoop--move-line-action)))
 
 (defadvice helm-previous-line (around helm-multi-swoop-previous-line disable)
-  ad-do-it
+  (interactive)
+  (helm-move-selection-common :where 'line :direction 'previous)
   (when (called-interactively-p 'any)
     (helm-multi-swoop--move-line-action)))
 
