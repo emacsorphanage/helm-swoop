@@ -264,7 +264,7 @@
 (defun helm-swoop--get-content (&optional $linum)
   "Get the whole content in buffer and add line number at the head.
 If $linum is number, lines are separated by $linum"
-  (let (($bufstr (buffer-substring-no-properties (point-min) (point-max)))
+  (let (($bufstr (buffer-substring (point-min) (point-max)))
         $return)
     (with-temp-buffer
       (insert $bufstr)
@@ -279,7 +279,7 @@ If $linum is number, lines are separated by $linum"
           (goto-char (point-min))
           (while (re-search-forward "^[0-9]+\\s-*$" nil t)
             (replace-match ""))))
-      (setq $return (buffer-substring-no-properties (point-min) (point-max))))
+      (setq $return (buffer-substring (point-min) (point-max))))
     $return))
 
 (defvar helm-swoop-map
@@ -298,6 +298,7 @@ If $linum is number, lines are separated by $linum"
                   (insert ,(helm-swoop--get-content)))
                 (setq helm-swoop-cache t))))
     (candidates-in-buffer)
+    (get-line . buffer-substring)
     (keymap . ,helm-swoop-map)
     (header-line . "[C-c C-e] Edit mode, [M-i] apply all buffers")
     (action . (lambda ($line)
