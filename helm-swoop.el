@@ -55,6 +55,9 @@
 
 ;; ;; Split direction. 'split-window-vertically or 'split-window-horizontally
 ;; (setq helm-swoop-split-direction 'split-window-vertically)
+
+;; ;; If nil, you can slightly boost invoke speed in exchange for text color
+;; (setq helm-swoop-speed-or-color t)
 ;; ----------------------------------------------------------------
 
 ;; Helm Swoop Edit
@@ -89,6 +92,11 @@
   '((t (:background "#7700ff" :foreground "#ffffff")))
   "Face for target line"
   :group 'helm-swoop)
+
+(defcustom helm-swoop-speed-or-color t
+ "If nil, you can slightly boost invoke speed in exchange for text color"
+ :group 'helm-swoop
+ :type 'boolean)
 
 (defcustom helm-swoop-split-with-multiple-windows nil
  "Split window when having multiple windows open"
@@ -264,7 +272,9 @@
 (defun helm-swoop--get-content (&optional $linum)
   "Get the whole content in buffer and add line number at the head.
 If $linum is number, lines are separated by $linum"
-  (let (($bufstr (buffer-substring (point-min) (point-max)))
+  (let (($bufstr (if helm-swoop-speed-or-color
+                     (buffer-substring (point-min) (point-max))
+                   (buffer-substring-no-properties (point-min) (point-max))))
         $return)
     (with-temp-buffer
       (insert $bufstr)
@@ -279,7 +289,10 @@ If $linum is number, lines are separated by $linum"
           (goto-char (point-min))
           (while (re-search-forward "^[0-9]+\\s-*$" nil t)
             (replace-match ""))))
-      (setq $return (buffer-substring (point-min) (point-max))))
+      (setq $return
+            (if helm-swoop-speed-or-color
+                (buffer-substring (point-min) (point-max))
+              (buffer-substring-no-properties (point-min) (point-max)))))
     $return))
 
 (defvar helm-swoop-map
@@ -298,7 +311,9 @@ If $linum is number, lines are separated by $linum"
                   (insert ,(helm-swoop--get-content)))
                 (setq helm-swoop-cache t))))
     (candidates-in-buffer)
-    (get-line . buffer-substring)
+    (get-line . ,(if helm-swoop-speed-or-color
+                     'buffer-substring
+                   'buffer-substring-no-properties))
     (keymap . ,helm-swoop-map)
     (header-line . "[C-c C-e] Edit mode, [M-i] apply all buffers")
     (action . (lambda ($line)
