@@ -118,19 +118,11 @@
     (other-window 1)
     (switch-to-buffer $buf))
   "Change the way to split window only when `helm-swoop' is calling")
-
-(defvar helm-swoop-at-screen-top helm-display-source-at-screen-top
-  "For enable scrolling margin")
-
-(defvar helm-swoop-store-scroll-margin helm-completion-window-scroll-margin
-  "To change scroll margin according to multiple line number and restore")
-
+(defvar helm-swoop-at-screen-top helm-display-source-at-screen-top)
+(defvar helm-swoop-store-scroll-margin helm-completion-window-scroll-margin)
 (defvar helm-swoop-candidate-number-limit 19999)
-
 (defvar helm-swoop-buffer "*Helm Swoop*")
-
 (defvar helm-swoop-prompt "Swoop: ")
-
 (defvar helm-swoop-last-point nil)
 
 ;; Buffer local variables
@@ -237,13 +229,16 @@
 ;; helm action ------------------------------------------------
 
 (defadvice helm-next-line (around helm-swoop-next-line disable)
-  ad-do-it
-  (when (called-interactively-p 'any)
-    (helm-swoop--move-line-action)))
+  (let ((helm-move-to-line-cycle-in-source t))
+    ad-do-it
+    (when (called-interactively-p 'any)
+      (helm-swoop--move-line-action))))
+
 (defadvice helm-previous-line (around helm-swoop-previous-line disable)
-  ad-do-it
-  (when (called-interactively-p 'any)
-    (helm-swoop--move-line-action)))
+  (let ((helm-move-to-line-cycle-in-source t))
+    ad-do-it
+    (when (called-interactively-p 'any)
+      (helm-swoop--move-line-action))))
 
 (defun helm-swoop--move-line-action ()
   (with-helm-window
@@ -436,6 +431,12 @@ If $linum is number, lines are separated by $linum"
         (ad-activate 'helm-next-line)
         (ad-enable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
         (ad-activate 'helm-previous-line)
+        (ad-enable-advice 'helm-move--next-line-fn 'around
+                          'helm-multi-swoop-next-line-cycle)
+        (ad-activate 'helm-move--next-line-fn)
+        (ad-enable-advice 'helm-move--previous-line-fn 'around
+                          'helm-multi-swoop-previous-line-cycle)
+        (ad-activate 'helm-move--previous-line-fn)
         (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
         ;; Switch input
         (cond ($input

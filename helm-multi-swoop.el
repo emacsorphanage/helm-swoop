@@ -47,16 +47,37 @@
 ;; action -----------------------------------------------------
 
 (defadvice helm-next-line (around helm-multi-swoop-next-line disable)
-  (interactive)
-  (helm-move-selection-common :where 'line :direction 'next)
-  (when (called-interactively-p 'any)
-    (helm-multi-swoop--move-line-action)))
+  (let ((helm-move-to-line-cycle-in-source nil))
+    ad-do-it
+    (when (called-interactively-p 'any)
+      (helm-multi-swoop--move-line-action))))
 
 (defadvice helm-previous-line (around helm-multi-swoop-previous-line disable)
-  (interactive)
-  (helm-move-selection-common :where 'line :direction 'previous)
-  (when (called-interactively-p 'any)
-    (helm-multi-swoop--move-line-action)))
+  (let ((helm-move-to-line-cycle-in-source nil))
+    ad-do-it
+    (when (called-interactively-p 'any)
+      (helm-multi-swoop--move-line-action))))
+
+(defadvice helm-move--next-line-fn (around helm-multi-swoop-next-line-cycle disable)
+  (if (not (helm-pos-multiline-p))
+      (progn (forward-line 1)
+             (when (eobp)
+               (helm-beginning-of-buffer)
+               (recenter)))
+    (let ((line-num (line-number-at-pos)))
+      (helm-move--next-multi-line-fn)
+      (when (eq line-num (line-number-at-pos))
+        (helm-beginning-of-buffer)))))
+
+(defadvice helm-move--previous-line-fn (around
+                                        helm-multi-swoop-previous-line-cycle disable)
+  (if (not (helm-pos-multiline-p))
+      (forward-line -1)
+    (helm-move--previous-multi-line-fn))
+  (when (helm-pos-header-line-p)
+    (when (eq (point) (save-excursion (forward-line -1) (point)))
+      (helm-end-of-buffer)
+      (and (helm-pos-multiline-p) (helm-move--previous-multi-line-fn)))))
 
 (defun helm-multi-swoop--overlay-move (&optional $buf)
   (move-overlay
@@ -164,6 +185,12 @@
           (ad-enable-advice 'helm-previous-line 'around
                             'helm-multi-swoop-previous-line)
           (ad-activate 'helm-previous-line)
+          (ad-enable-advice 'helm-move--next-line-fn 'around
+                            'helm-multi-swoop-next-line-cycle)
+          (ad-activate 'helm-move--next-line-fn)
+          (ad-enable-advice 'helm-move--previous-line-fn 'around
+                            'helm-multi-swoop-previous-line-cycle)
+          (ad-activate 'helm-move--previous-line-fn)
           (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
           (helm-multi-swoop--scrolling-set)
           (setq helm-swoop-line-overlay
@@ -191,6 +218,12 @@
         (ad-disable-advice 'helm-previous-line 'around
                            'helm-multi-swoop-previous-line)
         (ad-activate 'helm-previous-line)
+        (ad-disable-advice 'helm-move--next-line-fn 'around
+                           'helm-multi-swoop-previous-line)
+        (ad-activate 'helm-move--next-line-fn)
+        (ad-disable-advice 'helm-move--previous-line-fn 'around
+                           'helm-multi-swoop-previous-line-cycle)
+        (ad-activate 'helm-move--previous-line-fn)
         (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
         (setq helm-display-function helm-swoop-display-tmp)
         (setq helm-multi-swoop-last-query helm-pattern)
