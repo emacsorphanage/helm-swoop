@@ -232,7 +232,7 @@
 (defun helm-swoop--restore-unveiled-overlay ()
   (when helm-swoop-invisible-targets
     (dolist ($ov helm-swoop-invisible-targets)
-      (overlay-put $ov 'invisible t))
+      (overlay-put (car $ov) 'invisible (cdr $ov)))
     (setq helm-swoop-invisible-targets nil)))
 
 (defun helm-swoop--unveil-invisible-overlay ()
@@ -241,9 +241,11 @@ This function needs to call after latest helm-swoop-line-overlay set."
   (helm-swoop--restore-unveiled-overlay)
   (dolist ($ov (overlays-in (overlay-start helm-swoop-line-overlay)
                             (overlay-end helm-swoop-line-overlay)))
-    (when (overlay-get $ov 'invisible)
-      (overlay-put $ov 'invisible nil)
-      (setq helm-swoop-invisible-targets (cons $ov helm-swoop-invisible-targets)))))
+    (let (($type (overlay-get $ov 'invisible)))
+      (when $type
+        (overlay-put $ov 'invisible nil)
+        (setq helm-swoop-invisible-targets
+              (cons (cons $ov $type) helm-swoop-invisible-targets))))))
 
 ;; helm action ------------------------------------------------
 
