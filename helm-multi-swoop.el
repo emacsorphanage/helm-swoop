@@ -86,7 +86,8 @@
    (save-excursion
      (goto-char (point-at-bol))
      (or (search-forward "\n" nil t) (point-max)))
-   $buf))
+   $buf)
+  (helm-swoop--unveil-invisible-overlay))
 
 (defun helm-multi-swoop--move-line-action ()
   (with-helm-window
@@ -211,7 +212,10 @@
                         (helm-swoop--get-string-at-line))))
       ;; Restore
       (progn
-        (if (= 1 helm-exit-status) (helm-swoop-back-to-last-point t))
+        (when (= 1 helm-exit-status)
+          (helm-swoop-back-to-last-point t)
+          (helm-swoop--restore-unveiled-overlay))
+        (setq helm-swoop-invisible-targets nil)
         (ad-disable-advice 'helm-next-line 'around
                            'helm-multi-swoop-next-line)
         (ad-activate 'helm-next-line)
@@ -228,6 +232,7 @@
         (setq helm-display-function helm-swoop-display-tmp)
         (setq helm-multi-swoop-last-query helm-pattern)
         (helm-multi-swoop--scrolling-reset)
+        (helm-swoop--restore-unveiled-overlay)
         (setq helm-multi-swoop-query nil)
         (setq helm-multi-swoop-all-from-helm-swoop-last-point nil)
         (mapc (lambda ($x)
