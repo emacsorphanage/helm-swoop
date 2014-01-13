@@ -28,9 +28,10 @@
 
 (defun helm-swoop--clear-edit-buffer ($prop)
   (let ((inhibit-read-only t))
-    (dolist ($ov (overlays-in (point-min) (point-max)))
-      (when (overlay-get $ov $prop)
-        (delete-overlay $ov)))
+    (mapc (lambda ($ov)
+            (when (overlay-get $ov $prop)
+              (delete-overlay $ov)))
+          (overlays-in (point-min) (point-max)))
     (set-text-properties (point-min) (point-max) nil)
     (goto-char (point-min))
     (erase-buffer)))
@@ -60,17 +61,18 @@
   (setq helm-swoop-edit-target-buffer helm-swoop-target-buffer)
   (helm-swoop--delete-overlay 'target-buffer)
   (with-current-buffer (get-buffer-create helm-swoop-edit-buffer)
+
     (helm-swoop--clear-edit-buffer 'helm-swoop-edit)
     (let (($bufstr ""))
       ;; Get target line number to edit
       (with-current-buffer helm-swoop-buffer
-
         ;; Use selected line by [C-SPC] or [M-SPC]
-        (dolist ($ov (overlays-in (point-min) (point-max)))
-          (when (eq 'helm-visible-mark (overlay-get $ov 'face))
-            (setq $bufstr (concat (buffer-substring-no-properties
-                                   (overlay-start $ov) (overlay-end $ov))
-                                  $bufstr))))
+        (mapc (lambda ($ov)
+                (when (eq 'helm-visible-mark (overlay-get $ov 'face))
+                  (setq $bufstr (concat (buffer-substring-no-properties
+                                         (overlay-start $ov) (overlay-end $ov))
+                                        $bufstr))))
+              (overlays-in (point-min) (point-max)))
         (if (equal "" $bufstr)
             ;; Not found selected line
             (setq $bufstr (buffer-substring-no-properties
