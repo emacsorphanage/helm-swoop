@@ -59,6 +59,7 @@
   "This function will only be called from `helm-swoop-edit'"
   (interactive)
   (setq helm-swoop-edit-target-buffer helm-swoop-target-buffer)
+  (delete-overlay helm-swoop-line-overlay)
   (helm-swoop--delete-overlay 'target-buffer)
   (with-current-buffer (get-buffer-create helm-swoop-edit-buffer)
 
