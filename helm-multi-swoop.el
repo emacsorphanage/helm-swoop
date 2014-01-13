@@ -224,7 +224,7 @@
                            'helm-multi-swoop-previous-line)
         (ad-activate 'helm-previous-line)
         (ad-disable-advice 'helm-move--next-line-fn 'around
-                           'helm-multi-swoop-previous-line)
+                           'helm-multi-swoop-next-line-cycle)
         (ad-activate 'helm-move--next-line-fn)
         (ad-disable-advice 'helm-move--previous-line-fn 'around
                            'helm-multi-swoop-previous-line-cycle)
