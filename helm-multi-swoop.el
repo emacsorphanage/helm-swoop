@@ -109,18 +109,19 @@
 (defun helm-multi-swoop--get-marked-buffers ()
   (let ($list)
     (with-current-buffer helm-multi-swoop-buffer-list
-      (dolist ($ov (overlays-in (point-min) (point-max)))
-        (when (eq 'helm-visible-mark (overlay-get $ov 'face))
-          (setq $list (cons
-                       (let (($word (buffer-substring-no-properties
-                                     (overlay-start $ov) (overlay-end $ov))))
-                         (mapc (lambda ($r)
-                                 (setq $word (replace-regexp-in-string
-                                              (car $r) (cdr $r) $word)))
-                               (list '("\\`[ \t\n\r]+" . "")
-                                     '("[ \t\n\r]+\\'" . "")))
-                         $word)
-                       $list)))))
+      (mapc (lambda ($ov)
+              (when (eq 'helm-visible-mark (overlay-get $ov 'face))
+                (setq $list (cons
+                             (let (($word (buffer-substring-no-properties
+                                           (overlay-start $ov) (overlay-end $ov))))
+                               (mapc (lambda ($r)
+                                       (setq $word (replace-regexp-in-string
+                                                    (car $r) (cdr $r) $word)))
+                                     (list '("\\`[ \t\n\r]+" . "")
+                                           '("[ \t\n\r]+\\'" . "")))
+                               $word)
+                             $list))))
+            (overlays-in (point-min) (point-max))))
     (delete "" $list)))
 
 ;; temporary override ------------------------------------------

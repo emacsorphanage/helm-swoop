@@ -149,9 +149,10 @@
 (defsubst helm-swoop--delete-overlay ($identity &optional $beg $end)
   (or $beg (setq $beg (point-min)))
   (or $end (setq $end (point-max)))
-  (dolist ($o (overlays-in $beg $end))
-    (if (overlay-get $o $identity)
-        (delete-overlay $o))))
+  (mapc (lambda ($o)
+          (if (overlay-get $o $identity)
+              (delete-overlay $o)))
+        (overlays-in $beg $end)))
 
 (defsubst helm-swoop--get-string-at-line ()
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
@@ -213,39 +214,39 @@
   (save-excursion
     (let (($pat (split-string helm-pattern " "))
           $o)
-      (dolist ($wd $pat)
-        ;; Each word must be 3 or more
-        (when (< $threshold (length $wd))
-          (goto-char (point-min))
-          ;; Optional require migemo.el & helm-migemo.el
-          (if (and (featurep 'migemo) (featurep 'helm-migemo))
-              (setq $wd (migemo-search-pattern-get $wd)))
-          ;; For caret begging match
-          (if (string-match "^\\^\\[0\\-9\\]\\+\\.\\(.+\\)" $wd)
-              (setq $wd (concat "^" (match-string 1 $wd))))
-
-          (while (re-search-forward $wd nil t)
-            (setq $o (make-overlay (match-beginning 0) (match-end 0)))
-            (overlay-put $o 'face 'helm-swoop-target-word-face)
-            (overlay-put $o $identity t)))))))
+      (mapc (lambda ($wd)
+              (when (< $threshold (length $wd))
+                (goto-char (point-min))
+                ;; Optional require migemo.el & helm-migemo.el
+                (if (and (featurep 'migemo) (featurep 'helm-migemo))
+                    (setq $wd (migemo-search-pattern-get $wd)))
+                ;; For caret begging match
+                (if (string-match "^\\^\\[0\\-9\\]\\+\\.\\(.+\\)" $wd)
+                    (setq $wd (concat "^" (match-string 1 $wd))))
+                (while (re-search-forward $wd nil t)
+                  (setq $o (make-overlay (match-beginning 0) (match-end 0)))
+                  (overlay-put $o 'face 'helm-swoop-target-word-face)
+                  (overlay-put $o $identity t))))
+            $pat))))
 
 (defun helm-swoop--restore-unveiled-overlay ()
   (when helm-swoop-invisible-targets
-    (dolist ($ov helm-swoop-invisible-targets)
-      (overlay-put (car $ov) 'invisible (cdr $ov)))
+    (mapc (lambda ($ov) (overlay-put (car $ov) 'invisible (cdr $ov)))
+          helm-swoop-invisible-targets)
     (setq helm-swoop-invisible-targets nil)))
 
 (defun helm-swoop--unveil-invisible-overlay ()
   "Show hidden text temporarily to view it during helm-swoop.
 This function needs to call after latest helm-swoop-line-overlay set."
   (helm-swoop--restore-unveiled-overlay)
-  (dolist ($ov (overlays-in (overlay-start helm-swoop-line-overlay)
-                            (overlay-end helm-swoop-line-overlay)))
-    (let (($type (overlay-get $ov 'invisible)))
-      (when $type
-        (overlay-put $ov 'invisible nil)
-        (setq helm-swoop-invisible-targets
-              (cons (cons $ov $type) helm-swoop-invisible-targets))))))
+  (mapc (lambda ($ov)
+          (let (($type (overlay-get $ov 'invisible)))
+            (when $type
+              (overlay-put $ov 'invisible nil)
+              (setq helm-swoop-invisible-targets
+                    (cons (cons $ov $type) helm-swoop-invisible-targets)))))
+        (overlays-in (overlay-start helm-swoop-line-overlay)
+                     (overlay-end helm-swoop-line-overlay))))
 
 ;; helm action ------------------------------------------------
 
@@ -340,17 +341,7 @@ If $linum is number, lines are separated by $linum"
                        (mapconcat 'identity
                                   (split-string helm-pattern " ") "\\|")
                        nil t)
-                  (goto-char (match-beginning 0))
-
-                  ;; (dolist ($ov (overlays-in (point) (1+ (point))))
-                  ;;   (when (overlay-get $ov 'invisible)
-                  ;;     ;;(delete-overlay $ov)
-                  ;;     (overlay-put $ov 'invisible nil)
-                  ;;     ;;(princ "fff")
-                  ;;     )
-                  ;;   )
-
-                  )
+                  (goto-char (match-beginning 0)))
                 (recenter)))
     (migemo) ;;? in exchange for those matches ^ $ [0-9] .*
     ))

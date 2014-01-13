@@ -30,6 +30,7 @@
 (defun helm-multi-swoop--edit ($candidate)
   "This function will only be called from `helm-swoop-edit'"
   (interactive)
+  (delete-overlay helm-swoop-line-overlay)
   (helm-swoop--delete-overlay 'target-buffer)
   (with-current-buffer (get-buffer-create helm-multi-swoop-edit-buffer)
     (helm-swoop--clear-edit-buffer 'helm-multi-swoop-edit)
@@ -47,17 +48,18 @@
               (setq $beg $end)
               (goto-char $end))))
         ;; Use selected line by [C-SPC] or [M-SPC]
-        (dolist ($ov (overlays-in (point-min) (point-max)))
-          (when (overlay-get $ov 'source-header)
-            (setq $bufstr (concat (buffer-substring
-                                   (overlay-start $ov) (overlay-end $ov))
-                                  $bufstr)))
-          (when (eq 'helm-visible-mark (overlay-get $ov 'face))
-            (let (($str (buffer-substring (overlay-start $ov) (overlay-end $ov))))
-              (unless (equal "" $str) (setq $mark t))
-              (setq $bufstr (concat (buffer-substring
-                                     (overlay-start $ov) (overlay-end $ov))
-                                    $bufstr)))))
+        (mapc (lambda ($ov)
+                (when (overlay-get $ov 'source-header)
+                  (setq $bufstr (concat (buffer-substring
+                                         (overlay-start $ov) (overlay-end $ov))
+                                        $bufstr)))
+                (when (eq 'helm-visible-mark (overlay-get $ov 'face))
+                  (let (($str (buffer-substring (overlay-start $ov) (overlay-end $ov))))
+                    (unless (equal "" $str) (setq $mark t))
+                    (setq $bufstr (concat (buffer-substring
+                                           (overlay-start $ov) (overlay-end $ov))
+                                          $bufstr)))))
+              (overlays-in (point-min) (point-max)))
         (if $mark
             (progn (setq $bufstr (concat "Helm Multi Swoop\n" $bufstr))
                    (setq $mark nil))
