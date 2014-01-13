@@ -84,7 +84,7 @@ Skip select phase and apply last selected buffers, if you have done helm-multi-s
 (setq helm-swoop-split-direction 'split-window-vertically)
 
 ;; If nil, you can slightly boost invoke speed in exchange for text color
-(setq helm-swoop-speed-or-color t)
+(setq helm-swoop-speed-or-color nil)
 ```
 
 ### Require

@@ -57,7 +57,7 @@
 ;; (setq helm-swoop-split-direction 'split-window-vertically)
 
 ;; ;; If nil, you can slightly boost invoke speed in exchange for text color
-;; (setq helm-swoop-speed-or-color t)
+;; (setq helm-swoop-speed-or-color nil)
 ;; ----------------------------------------------------------------
 
 ;; Helm Swoop Edit
@@ -93,7 +93,7 @@
   "Face for target line"
   :group 'helm-swoop)
 
-(defcustom helm-swoop-speed-or-color t
+(defcustom helm-swoop-speed-or-color nil
  "If nil, you can slightly boost invoke speed in exchange for text color"
  :group 'helm-swoop
  :type 'boolean)
