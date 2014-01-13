@@ -118,12 +118,14 @@
     (other-window 1)
     (switch-to-buffer $buf))
   "Change the way to split window only when `helm-swoop' is calling")
+
 (defvar helm-swoop-at-screen-top helm-display-source-at-screen-top)
 (defvar helm-swoop-store-scroll-margin helm-completion-window-scroll-margin)
 (defvar helm-swoop-candidate-number-limit 19999)
 (defvar helm-swoop-buffer "*Helm Swoop*")
 (defvar helm-swoop-prompt "Swoop: ")
 (defvar helm-swoop-last-point nil)
+(defvar helm-swoop-invisible-targets nil)
 
 ;; Buffer local variables
 (defvar helm-swoop-cache)
@@ -202,7 +204,8 @@
      (goto-char (point-at-bol))
      (or (search-forward "\n" nil t helm-swoop-last-prefix-number)
          ;; For the end of buffer error
-         (point-max)))))
+         (point-max))))
+  (helm-swoop--unveil-invisible-overlay))
 
 (defun helm-swoop--target-word-overlay ($identity &optional $threshold)
   (interactive)
@@ -225,6 +228,22 @@
             (setq $o (make-overlay (match-beginning 0) (match-end 0)))
             (overlay-put $o 'face 'helm-swoop-target-word-face)
             (overlay-put $o $identity t)))))))
+
+(defun helm-swoop--restore-unveiled-overlay ()
+  (when helm-swoop-invisible-targets
+    (dolist ($ov helm-swoop-invisible-targets)
+      (overlay-put $ov 'invisible t))
+    (setq helm-swoop-invisible-targets nil)))
+
+(defun helm-swoop--unveil-invisible-overlay ()
+  "Show hidden text temporarily to view it during helm-swoop.
+This function needs to call after latest helm-swoop-line-overlay set."
+  (helm-swoop--restore-unveiled-overlay)
+  (dolist ($ov (overlays-in (overlay-start helm-swoop-line-overlay)
+                            (overlay-end helm-swoop-line-overlay)))
+    (when (overlay-get $ov 'invisible)
+      (overlay-put $ov 'invisible nil)
+      (setq helm-swoop-invisible-targets (cons $ov helm-swoop-invisible-targets)))))
 
 ;; helm action ------------------------------------------------
 
@@ -319,7 +338,17 @@ If $linum is number, lines are separated by $linum"
                        (mapconcat 'identity
                                   (split-string helm-pattern " ") "\\|")
                        nil t)
-                  (goto-char (match-beginning 0)))
+                  (goto-char (match-beginning 0))
+
+                  ;; (dolist ($ov (overlays-in (point) (1+ (point))))
+                  ;;   (when (overlay-get $ov 'invisible)
+                  ;;     ;;(delete-overlay $ov)
+                  ;;     (overlay-put $ov 'invisible nil)
+                  ;;     ;;(princ "fff")
+                  ;;     )
+                  ;;   )
+
+                  )
                 (recenter)))
     (migemo) ;;? in exchange for those matches ^ $ [0-9] .*
     ))
@@ -376,7 +405,10 @@ If $linum is number, lines are separated by $linum"
 (add-hook 'after-save-hook 'helm-swoop--clear-cache)
 
 (defun helm-swoop--restore ()
-  (if (= 1 helm-exit-status) (helm-swoop-back-to-last-point t))
+  (when (= 1 helm-exit-status)
+    (helm-swoop-back-to-last-point t)
+    (helm-swoop--restore-unveiled-overlay))
+  (setq helm-swoop-invisible-targets nil)
   (ad-disable-advice 'helm-next-line 'around 'helm-swoop-next-line)
   (ad-activate 'helm-next-line)
   (ad-disable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
