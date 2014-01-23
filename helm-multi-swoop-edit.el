@@ -15,7 +15,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'helm)
+(require 'helm-utils)
 
 (defvar helm-multi-swoop-edit-save t
   "Save each buffer you edit when editing is complete")

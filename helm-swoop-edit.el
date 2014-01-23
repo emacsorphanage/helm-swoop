@@ -15,7 +15,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'helm)
+(require 'helm-utils)
 
 (defvar helm-swoop-edit-target-buffer)
 (defvar helm-swoop-edit-buffer "*Helm Swoop Edit*")
