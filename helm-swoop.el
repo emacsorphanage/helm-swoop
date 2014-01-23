@@ -119,8 +119,6 @@
     (switch-to-buffer $buf))
   "Change the way to split window only when `helm-swoop' is calling")
 
-(defvar helm-swoop-at-screen-top helm-display-source-at-screen-top)
-(defvar helm-swoop-store-scroll-margin helm-completion-window-scroll-margin)
 (defvar helm-swoop-candidate-number-limit 19999)
 (defvar helm-swoop-buffer "*Helm Swoop*")
 (defvar helm-swoop-prompt "Swoop: ")
@@ -371,25 +369,13 @@ If $linum is number, lines are separated by $linum"
     (multiline)
     (migemo)))
 
-(defvar helm-swoop-display-tmp helm-display-function
-  "To restore helm window display function")
-
-(defun helm-swoop--scrolling-set (&optional $multiline)
+(defun helm-swoop--set-prefix (&optional $multiline)
   ;; Enable scrolling margin
   (if (boundp 'helm-swoop-last-prefix-number)
       (setq helm-swoop-last-prefix-number
             (or $multiline 1)) ;; $multiline is for resume
     (set (make-local-variable 'helm-swoop-last-prefix-number)
-         (or $multiline 1)))
-  ;; Modify scrolling temporarily
-  (when helm-display-source-at-screen-top
-    (setq helm-display-source-at-screen-top nil))
-  (setq helm-completion-window-scroll-margin
-          (+ 5 helm-swoop-last-prefix-number)))
-
-(defun helm-swoop--scrolling-reset ()
-  (setq helm-display-source-at-screen-top helm-swoop-at-screen-top)
-  (setq helm-completion-window-scroll-margin helm-swoop-store-scroll-margin))
+         (or $multiline 1))))
 
 ;; Delete cache when modified file is saved
 (defun helm-swoop--clear-cache ()
@@ -407,9 +393,7 @@ If $linum is number, lines are separated by $linum"
   (ad-disable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
   (ad-activate 'helm-previous-line)
   (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
-  (setq helm-display-function helm-swoop-display-tmp)
   (setq helm-swoop-last-query helm-pattern)
-  (helm-swoop--scrolling-reset)
   (mapc (lambda ($ov)
           (when (or (eq 'helm-swoop-target-line-face (overlay-get $ov 'face))
                     (eq 'helm-swoop-target-line-block-face
@@ -430,7 +414,7 @@ If $linum is number, lines are separated by $linum"
   (unless (boundp 'helm-swoop-last-query)
     (set (make-local-variable 'helm-swoop-last-query) ""))
   (setq helm-swoop-target-buffer (current-buffer))
-  (helm-swoop--scrolling-set $multiline)
+  (helm-swoop--set-prefix $multiline)
   ;; Overlay
   (setq helm-swoop-line-overlay (make-overlay (point) (point)))
   (overlay-put helm-swoop-line-overlay
@@ -449,8 +433,6 @@ If $linum is number, lines are separated by $linum"
          (setq helm-swoop-list-cache nil)))
   (unwind-protect
       (progn
-        ;; Modify window split function temporarily
-        (setq helm-display-function helm-swoop-split-window-function)
         ;; For synchronizing line position
         (ad-enable-advice 'helm-next-line 'around 'helm-swoop-next-line)
         (ad-activate 'helm-next-line)
@@ -483,23 +465,26 @@ If $linum is number, lines are separated by $linum"
         (move-beginning-of-line 1)
         (helm-swoop--target-line-overlay-move)
         ;; Execute helm
-        (helm :sources
-              (if (> helm-swoop-last-prefix-number 1)
-                  (helm-c-source-swoop-multiline helm-swoop-last-prefix-number)
-                (helm-c-source-swoop))
-              :buffer helm-swoop-buffer
-              :input $input
-              :prompt helm-swoop-prompt
-              :preselect
-              ;; Get current line has content or else near one
-              (if (string-match "^[\t\n\s]*$" (helm-swoop--get-string-at-line))
-                  (save-excursion
-                    (if (re-search-forward "[^\t\n\s]" nil t)
-                        (format "^%s\s" (line-number-at-pos))
-                      (re-search-backward "[^\t\n\s]" nil t)
-                      (format "^%s\s" (line-number-at-pos))))
-                (format "^%s\s" (line-number-at-pos)))
-              :candidate-number-limit helm-swoop-candidate-number-limit))
+        (let ((helm-display-function helm-swoop-split-window-function)
+              (helm-display-source-at-screen-top nil)
+              (helm-completion-window-scroll-margin 5))
+          (helm :sources
+                (if (> helm-swoop-last-prefix-number 1)
+                    (helm-c-source-swoop-multiline helm-swoop-last-prefix-number)
+                  (helm-c-source-swoop))
+                :buffer helm-swoop-buffer
+                :input $input
+                :prompt helm-swoop-prompt
+                :preselect
+                ;; Get current line has content or else near one
+                (if (string-match "^[\t\n\s]*$" (helm-swoop--get-string-at-line))
+                    (save-excursion
+                      (if (re-search-forward "[^\t\n\s]" nil t)
+                          (format "^%s\s" (line-number-at-pos))
+                        (re-search-backward "[^\t\n\s]" nil t)
+                        (format "^%s\s" (line-number-at-pos))))
+                  (format "^%s\s" (line-number-at-pos)))
+                :candidate-number-limit helm-swoop-candidate-number-limit)))
     ;; Restore helm's hook and window function etc
     (helm-swoop--restore)))
 
@@ -531,16 +516,14 @@ If $linum is number, lines are separated by $linum"
     (setq ad-return-value nil)))
 
 (defadvice helm-resume (around helm-swoop-resume activate)
-  "Resume if the last used helm buffer ishelm-swoop-buffer"
-  (if (equal helm-last-buffer helm-swoop-buffer) ;; 1
-
-      (if (boundp 'helm-swoop-last-query)  ;; 2
-          (if (not (ad-get-arg 0)) ;; 3
+  "Resume if the last used helm buffer is helm-swoop-buffer"
+  (if (equal helm-last-buffer helm-swoop-buffer)
+      (if (boundp 'helm-swoop-last-query)
+          (if (not (ad-get-arg 0))
               (helm-swoop helm-swoop-last-prefix-number helm-swoop-last-query))
         ;; Temporary apply second last buffer
-        (let ((helm-last-buffer (cadr helm-buffers))) ad-do-it)) ;; 2 else
-    ad-do-it) ;; 1 else
-    )
+        (let ((helm-last-buffer (cadr helm-buffers))) ad-do-it))
+    ad-do-it))
 
 ;; For caret beginning-match -----------------------------
 (defun helm-swoop--caret-match-delete ($o $aft $beg $end &optional $len)
