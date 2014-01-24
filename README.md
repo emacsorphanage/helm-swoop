@@ -1,6 +1,6 @@
 List the multi lines to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
 
-![helm-swoop](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-swoop.gif)
+![helm-swoop](https://raw2.github.com/ShingoFukuyama/images/master/helm-swoop.gif)
 
 ### Feature
 
@@ -40,7 +40,7 @@ Apply changes to original buffer type `C-x C-s`.
 1. Select any buffers by [C-SPC] or [M-SPC]
 2. Press [RET] to start helm-multi-swoop
 
-![helm-multi-swoop](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-multi-swoop.gif)
+![helm-multi-swoop](https://raw2.github.com/ShingoFukuyama/images/master/helm-multi-swoop.gif)
 
 ##### `M-x helm-multi-swoop-all`
 Skip select phase and apply all buffers.
@@ -52,7 +52,7 @@ Skip select phase and apply last selected buffers, if you have done helm-multi-s
 #### Multiline behavior 
 `M-4 M-x helm-swoop` or `C-u 4 M-x helm-swoop`
 
-![helm-swoop2](https://github.com/ShingoFukuyama/helm-swoop/raw/master/image/helm-swoop2.gif)
+![helm-swoop2](https://raw2.github.com/ShingoFukuyama/images/master/helm-swoop2.gif)
 
 ### Config
 
