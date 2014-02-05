@@ -1,4 +1,4 @@
-List the multi lines to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
+List match lines to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
 
 ![helm-swoop](https://raw2.github.com/ShingoFukuyama/images/master/helm-swoop.gif)
 
@@ -23,6 +23,7 @@ List the multi lines to another buffer, which is able to squeeze by any words yo
 * `M-x helm-multi-swoop` multi-occur like feature
 * `M-x helm-multi-swoop-all` apply all buffers
 * `C-u M-x helm-multi-swoop` apply last selected buffers from the second time
+* `M-x helm-swoop-same-face-at-point` list lines have the same face at the cursor is on
 * During isearch `M-i` to hand the word over to helm-swoop
 * During helm-swoop `M-i` to hand the word over to helm-multi-swoop-all
 * While doing `helm-swoop` press `C-c C-e` to edit mode, apply changes to original buffer by `C-x C-s`

@@ -60,6 +60,18 @@
 ;; (setq helm-swoop-speed-or-color nil)
 ;; ----------------------------------------------------------------
 
+;; * `M-x helm-swoop` when region active
+;; * `M-x helm-swoop` when the cursor is at any symbol
+;; * `M-x helm-swoop` when the cursor is not at any symbol
+;; * `M-3 M-x helm-swoop` or `C-u 5 M-x helm-swoop` multi separated line culling
+;; * `M-x helm-multi-swoop` multi-occur like feature
+;; * `M-x helm-multi-swoop-all` apply all buffers
+;; * `C-u M-x helm-multi-swoop` apply last selected buffers from the second time
+;; * `M-x helm-swoop-same-face-at-point` list lines have the same face at the cursor is on
+;; * During isearch `M-i` to hand the word over to helm-swoop
+;; * During helm-swoop `M-i` to hand the word over to helm-multi-swoop-all
+;; * While doing `helm-swoop` press `C-c C-e` to edit mode, apply changes to original buffer by `C-x C-s`
+
 ;; Helm Swoop Edit
 ;; While doing helm-swoop, press keybind [C-c C-e] to move to edit buffer.
 ;; Edit the list and apply by [C-x C-s]. If you'd like to cancel, [C-c C-g]
@@ -161,6 +173,11 @@
 (defsubst helm-swoop--thing-at-point ()
   "For fix wrong-type-argument stringp error"
   (substring-no-properties (or (thing-at-point 'symbol) "")))
+
+(defsubst helm-swoop--buffer-substring ()
+  (if helm-swoop-speed-or-color
+      (buffer-substring (point-min) (point-max))
+    (buffer-substring-no-properties (point-min) (point-max))))
 
 ;;;###autoload
 (defun helm-swoop-back-to-last-point (&optional $cancel)
@@ -290,9 +307,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
 (defun helm-swoop--get-content (&optional $linum)
   "Get the whole content in buffer and add line number at the head.
 If $linum is number, lines are separated by $linum"
-  (let (($bufstr (if helm-swoop-speed-or-color
-                     (buffer-substring (point-min) (point-max))
-                   (buffer-substring-no-properties (point-min) (point-max))))
+  (let (($bufstr (helm-swoop--buffer-substring))
         $return)
     (with-temp-buffer
       (insert $bufstr)
@@ -307,10 +322,7 @@ If $linum is number, lines are separated by $linum"
           (goto-char (point-min))
           (while (re-search-forward "^[0-9]+\\s-*$" nil t)
             (replace-match ""))))
-      (setq $return
-            (if helm-swoop-speed-or-color
-                (buffer-substring (point-min) (point-max))
-              (buffer-substring-no-properties (point-min) (point-max)))))
+      (setq $return (helm-swoop--buffer-substring)))
     $return))
 
 (defun helm-c-source-swoop ()
@@ -399,8 +411,8 @@ If $linum is number, lines are separated by $linum"
   (deactivate-mark t))
 
 ;;;###autoload
-(defun helm-swoop (&optional $multiline $input)
-  (interactive "p")
+(cl-defun helm-swoop (&key $query $source $bufname ($multiline current-prefix-arg))
+  (interactive)
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
  is jumping line to line according to moving up and down the list."
@@ -440,21 +452,20 @@ If $linum is number, lines are separated by $linum"
                           'helm-multi-swoop-previous-line-cycle)
         (ad-activate 'helm-move--previous-line-fn)
         (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
-        ;; Switch input
-        (cond ($input
+        (cond ($query
                (if (string-match
-                    "\\(\\^\\[0\\-9\\]\\+\\.\\)\\(.*\\)" $input)
-                   $input ;; NEED FIX #1 to appear as a "^"
-                 $input))
+                    "\\(\\^\\[0\\-9\\]\\+\\.\\)\\(.*\\)" $query)
+                   $query ;; NEED FIX #1 to appear as a "^"
+                 $query))
               (mark-active
                (let (($st (buffer-substring-no-properties
                            (region-beginning) (region-end))))
                  (if (string-match "\n" $st)
                      (message "Multi line region is not allowed")
-                   (setq $input $st))))
+                   (setq $query $st))))
               ((helm-swoop--thing-at-point)
-               (setq $input (helm-swoop--thing-at-point)))
-              (t (setq $input "")))
+               (setq $query (helm-swoop--thing-at-point)))
+              (t (setq $query "")))
         ;; First behavior
         (recenter)
         (move-beginning-of-line 1)
@@ -464,11 +475,12 @@ If $linum is number, lines are separated by $linum"
               (helm-display-source-at-screen-top nil)
               (helm-completion-window-scroll-margin 5))
           (helm :sources
-                (if (> helm-swoop-last-prefix-number 1)
-                    (helm-c-source-swoop-multiline helm-swoop-last-prefix-number)
-                  (helm-c-source-swoop))
-                :buffer helm-swoop-buffer
-                :input $input
+                (or $source
+                    (if (> helm-swoop-last-prefix-number 1)
+                        (helm-c-source-swoop-multiline helm-swoop-last-prefix-number)
+                      (helm-c-source-swoop)))
+                :buffer (or $bufname helm-swoop-buffer)
+                :input $query
                 :prompt helm-swoop-prompt
                 :preselect
                 ;; Get current line has content or else near one
@@ -488,10 +500,10 @@ If $linum is number, lines are separated by $linum"
 (defun helm-swoop-from-isearch ()
   "Invoke `helm-swoop' from isearch."
   (interactive)
-  (let (($input (if isearch-regexp
+  (let (($query (if isearch-regexp
                     isearch-string
                   (regexp-quote isearch-string))))
-    (helm-swoop nil $input)))
+    (helm-swoop :$query $query)))
 ;; When doing isearch, hand the word over to helm-swoop
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
 
@@ -507,7 +519,8 @@ If $linum is number, lines are separated by $linum"
       ad-do-it))
   (when (and (equal ad-return-value helm-swoop-buffer)
              (boundp 'helm-swoop-last-query))
-    (helm-swoop helm-swoop-last-prefix-number helm-swoop-last-query)
+    (helm-swoop :$query helm-swoop-last-query
+                :$multiline helm-swoop-last-prefix-number)
     (setq ad-return-value nil)))
 
 (defadvice helm-resume (around helm-swoop-resume activate)
@@ -515,7 +528,8 @@ If $linum is number, lines are separated by $linum"
   (if (equal helm-last-buffer helm-swoop-buffer)
       (if (boundp 'helm-swoop-last-query)
           (if (not (ad-get-arg 0))
-              (helm-swoop helm-swoop-last-prefix-number helm-swoop-last-query))
+              (helm-swoop :$query helm-swoop-last-query
+                          :$multiline helm-swoop-last-prefix-number))
         ;; Temporary apply second last buffer
         (let ((helm-last-buffer (cadr helm-buffers))) ad-do-it))
     ad-do-it))
@@ -791,14 +805,13 @@ If $linum is number, lines are separated by $linum"
 
 ;; core --------------------------------------------------------
 
-(defun helm-multi-swoop--exec ($candidate &optional $query $buffer-list)
+(cl-defun helm-multi-swoop--exec (ignored &key $query $buflist)
   (interactive)
-  (or $candidate (setq $candidate nil)) ;; don't use but indespensable
   (setq helm-swoop-synchronizing-window (selected-window))
   (setq helm-swoop-last-point
         (or helm-multi-swoop-all-from-helm-swoop-last-point
             (cons (point) (buffer-name (current-buffer)))))
-  (let (($buffs (or $buffer-list (helm-multi-swoop--get-marked-buffers)))
+  (let (($buffs (or $buflist (helm-multi-swoop--get-marked-buffers)))
         $contents
         $preserve-position)
     (setq helm-multi-swoop-last-selected-buffers $buffs)
@@ -924,7 +937,7 @@ If $linum is number, lines are separated by $linum"
     (keymap . ,helm-multi-swoop-buffers-map)))
 
 ;;;###autoload
-(defun helm-multi-swoop (&optional $query $buffer-list)
+(defun helm-multi-swoop (&optional $query $buflist)
   (interactive)
   "\
 Usage:
@@ -948,9 +961,13 @@ Last selected buffers will be applied to helm-multi-swoop.
          (setq helm-multi-swoop-query (helm-swoop--thing-at-point)))
         (t (setq helm-multi-swoop-query "")))
   (if (equal current-prefix-arg '(4))
-      (helm-multi-swoop--exec nil helm-multi-swoop-query $buffer-list)
-    (if $buffer-list
-        (helm-multi-swoop--exec nil $query $buffer-list)
+      (helm-multi-swoop--exec nil
+                              :$query helm-multi-swoop-query
+                              :$buflist $buflist)
+    (if $buflist
+        (helm-multi-swoop--exec nil
+                                :$query $query
+                                :$buflist $buflist)
       (helm :sources (helm-c-source-helm-multi-swoop-buffers)
             :buffer helm-multi-swoop-buffer-list
             :prompt "Mark any buffers by [C-SPC] or [M-SPC]: "))))
@@ -971,18 +988,18 @@ Last selected buffers will be applied to helm-multi-swoop.
          (setq helm-multi-swoop-query (helm-swoop--thing-at-point)))
         (t (setq helm-multi-swoop-query "")))
   (helm-multi-swoop--exec nil
-                          helm-multi-swoop-query
-                          (helm-multi-swoop--get-buffer-list)))
+                          :$query helm-multi-swoop-query
+                          :$buflist (helm-multi-swoop--get-buffer-list)))
 
 ;; option -------------------------------------------------------
 
 (defun helm-multi-swoop-all-from-isearch ()
   "Invoke `helm-multi-swoop-all' from isearch."
   (interactive)
-  (let (($input (if isearch-regexp
+  (let (($query (if isearch-regexp
                     isearch-string
                   (regexp-quote isearch-string))))
-    (helm-multi-swoop-all $input)))
+    (helm-multi-swoop-all $query)))
 ;; When doing isearch, hand the word over to helm-swoop
 ;; (define-key isearch-mode-map (kbd "C-x M-i") 'helm-multi-swoop-all-from-isearch)
 
@@ -1188,6 +1205,50 @@ Last selected buffers will be applied to helm-multi-swoop.
 (defun helm-multi-swoop-edit ()
   (interactive)
   (helm-quit-and-execute-action 'helm-multi-swoop--edit))
+
+;;; @ helm-swoop-same-face-at-point -----------------------------------
+
+(defsubst helm-swoop--get-at-face (&optional $point)
+  (or $point (setq $point (point)))
+  (let (($face (or (get-char-property $point 'read-face-name)
+                   (get-char-property $point 'face))))
+      $face))
+
+(defun helm-swoop--cull-face-include-line ($face)
+  (let (($list) ($po (point-min)))
+    (save-excursion
+      (while (setq $po (next-single-property-change $po 'face))
+        (when (equal $face (helm-swoop--get-at-face $po))
+          (goto-char $po)
+          (setq $list (cons (format "%s %s"
+                                    (line-number-at-pos)
+                                    (buffer-substring (point-at-bol) (point-at-eol)))
+                            $list))
+          (let (($ov (make-overlay $po (or (next-single-property-change $po 'face)
+                                           (point-max)))))
+            (overlay-put $ov 'face 'helm-swoop-target-word-face)
+            (overlay-put $ov 'target-buffer 'helm-swoop-target-word-face)))))
+      (nreverse $list)))
+
+(defun helm-swoop-same-face-at-point (&optional $face)
+  (interactive)
+  (or $face (setq $face (helm-swoop--get-at-face)))
+  (helm-swoop :$query ""
+              :$source
+              `((name . "helm-swoop-same-face-at-point")
+                (candidates . ,(helm-swoop--cull-face-include-line $face))
+                (header-line . ,(format "%s" $face))
+                (action . (lambda ($line)
+                            (helm-swoop--goto-line
+                             (when (string-match "^[0-9]+" $line)
+                               (string-to-number (match-string 0 $line))))
+                            (let (($po (point))
+                                  ($poe (point-at-eol)))
+                              (while (<= (setq $po (next-single-property-change $po 'face)) $poe)
+                                (when (eq 'helm-swoop-target-word-face (helm-swoop--get-at-face $po))
+                                  (goto-char $po))))
+                            (recenter))))
+              :$bufname "*Helm Swoop Same Face*"))
 
 (provide 'helm-swoop)
 ;;; helm-swoop.el ends here
