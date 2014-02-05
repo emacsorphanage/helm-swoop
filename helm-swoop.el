@@ -411,7 +411,7 @@ If $linum is number, lines are separated by $linum"
   (deactivate-mark t))
 
 ;;;###autoload
-(cl-defun helm-swoop (&key $query $source $bufname ($multiline current-prefix-arg))
+(cl-defun helm-swoop (&key $query $source ($multiline current-prefix-arg))
   (interactive)
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
@@ -479,7 +479,7 @@ If $linum is number, lines are separated by $linum"
                     (if (> helm-swoop-last-prefix-number 1)
                         (helm-c-source-swoop-multiline helm-swoop-last-prefix-number)
                       (helm-c-source-swoop)))
-                :buffer (or $bufname helm-swoop-buffer)
+                :buffer helm-swoop-buffer
                 :input $query
                 :prompt helm-swoop-prompt
                 :preselect
@@ -773,7 +773,8 @@ If $linum is number, lines are separated by $linum"
     (let* (($key (buffer-substring (point-at-bol) (point-at-eol)))
            ($num (when (string-match "^[0-9]+" $key)
                    (string-to-number (match-string 0 $key))))
-           ($buf (get-buffer (get-text-property 0 'buffer-name $key))))
+           ($source (helm-get-current-source))
+           ($buf (get-buffer (assoc-default 'name $source))))
       ;; Synchronizing line position
       (with-selected-window helm-swoop-synchronizing-window
         (with-current-buffer $buf
@@ -805,7 +806,7 @@ If $linum is number, lines are separated by $linum"
 
 ;; core --------------------------------------------------------
 
-(cl-defun helm-multi-swoop--exec (ignored &key $query $buflist)
+(cl-defun helm-multi-swoop--exec (ignored &key $query $buflist $func $action)
   (interactive)
   (setq helm-swoop-synchronizing-window (selected-window))
   (setq helm-swoop-last-point
@@ -818,28 +819,32 @@ If $linum is number, lines are separated by $linum"
     ;; Create buffer sources
     (mapc (lambda ($buf)
             (with-current-buffer $buf
-              (let* (($cont (concat (helm-swoop--get-content) "\n")))
+              (let* (($func
+                      (or $func
+                          (lambda () (split-string (helm-swoop--get-content) "\n"))))
+                     ($action
+                      (or $action
+                          (lambda ($line)
+                            (switch-to-buffer $buf)
+                            (helm-swoop--goto-line
+                             (when (string-match "^[0-9]+" $line)
+                               (string-to-number
+                                (match-string 0 $line))))
+                            (when (re-search-forward
+                                   (mapconcat 'identity
+                                              (split-string
+                                               helm-pattern " ") "\\|")
+                                   nil t)
+                              (goto-char (match-beginning 0)))
+                            (recenter)))))
                 (setq $preserve-position
                       (cons (cons $buf (point)) $preserve-position))
-                (setq $cont (propertize $cont 'buffer-name $buf))
                 (setq
                  $contents
                  (cons
                   `((name . ,$buf)
-                    (candidates . (lambda () (split-string ,$cont "\n")))
-                    (action . (lambda ($line)
-                                (switch-to-buffer ,$buf)
-                                (helm-swoop--goto-line
-                                 (when (string-match "^[0-9]+" $line)
-                                   (string-to-number
-                                    (match-string 0 $line))))
-                                (when (re-search-forward
-                                       (mapconcat 'identity
-                                                  (split-string
-                                                   helm-pattern " ") "\\|")
-                                       nil t)
-                                  (goto-char (match-beginning 0)))
-                                (recenter)))
+                    (candidates . ,(funcall $func))
+                    (action . ,$action)
                     (header-line . "[C-c C-e] Edit mode")
                     (keymap . ,helm-multi-swoop-map))
                   $contents)))))
@@ -1221,7 +1226,7 @@ Last selected buffers will be applied to helm-multi-swoop.
         (when (equal $face (helm-swoop--get-at-face $po))
           (goto-char $po)
           (setq $list (cons (format "%s %s"
-                                    (line-number-at-pos)
+                                    (line-number-at-pos $po)
                                     (buffer-substring (point-at-bol) (point-at-eol)))
                             $list))
           (let (($ov (make-overlay $po (or (next-single-property-change $po 'face)
@@ -1247,8 +1252,27 @@ Last selected buffers will be applied to helm-multi-swoop.
                               (while (<= (setq $po (next-single-property-change $po 'face)) $poe)
                                 (when (eq 'helm-swoop-target-word-face (helm-swoop--get-at-face $po))
                                   (goto-char $po))))
-                            (recenter))))
-              :$bufname "*Helm Swoop Same Face*"))
+                            (recenter))))))
+
+(defun helm-multi-swoop-same-face-at-point (&optional $face)
+  (interactive)
+  (or $face (setq $face (helm-swoop--get-at-face)))
+  (helm-multi-swoop--exec
+   nil
+   :$query ""
+   :$func (lambda () (helm-swoop--cull-face-include-line $face))
+   :$action (lambda ($line)
+              (switch-to-buffer (assoc-default 'name (helm-get-current-source)))
+              (helm-swoop--goto-line
+               (when (string-match "^[0-9]+" $line)
+                 (string-to-number (match-string 0 $line))))
+              (let (($po (point))
+                    ($poe (point-at-eol)))
+                (while (<= (setq $po (next-single-property-change $po 'face)) $poe)
+                  (when (eq 'helm-swoop-target-word-face (helm-swoop--get-at-face $po))
+                    (goto-char $po))))
+              (recenter))
+   :$buflist (helm-multi-swoop--get-buffer-list)))
 
 (provide 'helm-swoop)
 ;;; helm-swoop.el ends here
