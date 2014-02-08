@@ -1230,7 +1230,7 @@ Last selected buffers will be applied to helm-multi-swoop.
                                            (point-max)))))
             (overlay-put $ov 'face 'helm-swoop-target-word-face)
             (overlay-put $ov 'target-buffer 'helm-swoop-target-word-face)))))
-      (nreverse $list)))
+      (nreverse (delete-dups $list))))
 
 (defun helm-swoop-same-face-at-point (&optional $face)
   (interactive)
