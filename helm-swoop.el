@@ -154,6 +154,10 @@
     (delq nil $map))
   "Keymap for helm-swoop")
 
+(defvar helm-swoop-pre-input-function
+  (lambda () (thing-at-point 'symbol))
+  "This function can pre-input keywords when helm-swoop invoked")
+
 (defsubst helm-swoop--goto-line ($line)
   (goto-char (point-min))
   (unless (search-forward "\n" nil t (1- $line))
@@ -169,10 +173,6 @@
 
 (defsubst helm-swoop--get-string-at-line ()
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
-
-(defsubst helm-swoop--thing-at-point ()
-  "For fix wrong-type-argument stringp error"
-  (substring-no-properties (or (thing-at-point 'symbol) "")))
 
 (defsubst helm-swoop--buffer-substring ()
   (if helm-swoop-speed-or-color
@@ -463,8 +463,7 @@ If $linum is number, lines are separated by $linum"
                  (if (string-match "\n" $st)
                      (message "Multi line region is not allowed")
                    (setq $query $st))))
-              ((helm-swoop--thing-at-point)
-               (setq $query (helm-swoop--thing-at-point)))
+              ((setq $query (funcall helm-swoop-pre-input-function)))
               (t (setq $query "")))
         ;; First behavior
         (recenter)
@@ -962,8 +961,7 @@ Last selected buffers will be applied to helm-multi-swoop.
            (if (string-match "\n" $st)
                (message "Multi line region is not allowed")
              (setq helm-multi-swoop-query $st))))
-        ((helm-swoop--thing-at-point)
-         (setq helm-multi-swoop-query (helm-swoop--thing-at-point)))
+        ((setq helm-multi-swoop-query (funcall helm-swoop-pre-input-function)))
         (t (setq helm-multi-swoop-query "")))
   (if (equal current-prefix-arg '(4))
       (helm-multi-swoop--exec nil
@@ -989,8 +987,7 @@ Last selected buffers will be applied to helm-multi-swoop.
            (if (string-match "\n" $st)
                (message "Multi line region is not allowed")
              (setq helm-multi-swoop-query $st))))
-        ((helm-swoop--thing-at-point)
-         (setq helm-multi-swoop-query (helm-swoop--thing-at-point)))
+        ((setq helm-multi-swoop-query (funcall helm-swoop-pre-input-function)))
         (t (setq helm-multi-swoop-query "")))
   (helm-multi-swoop--exec nil
                           :$query helm-multi-swoop-query
