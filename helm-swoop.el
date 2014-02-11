@@ -506,6 +506,18 @@ If $linum is number, lines are separated by $linum"
 ;; When doing isearch, hand the word over to helm-swoop
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
 
+;; Receive word from evil search ---------------
+(defun helm-swoop-from-evil-search ()
+  "Invoke `helm-swoop' from evil isearch"
+  (interactive)
+  (if (string-match "\\(isearch-\\|evil.*search\\)" (symbol-name real-last-command))
+      (helm-swoop :$query (if isearch-regexp
+                              isearch-string
+                            (regexp-quote isearch-string)))
+    (helm-swoop)))
+;; When doing evil-search, hand the word over to helm-swoop
+;; (define-key evil-motion-state-map (kbd "M-i") 'helm-swoop-from-evil-search)
+
 ;; For helm-resume ------------------------
 (defadvice helm-resume-select-buffer
   (around helm-swoop-if-selected-as-resume activate)
