@@ -160,8 +160,7 @@
 
 (defsubst helm-swoop--goto-line ($line)
   (goto-char (point-min))
-  (unless (search-forward "\n" nil t (1- $line))
-    (goto-char (point-max))))
+  (forward-line (1- $line)))
 
 (defsubst helm-swoop--delete-overlay ($identity &optional $beg $end)
   (or $beg (setq $beg (point-min)))
@@ -221,7 +220,7 @@
    ;; For multiline highlight
    (save-excursion
      (goto-char (point-at-bol))
-     (or (search-forward "\n" nil t helm-swoop-last-prefix-number)
+     (or (re-search-forward "\n" nil t helm-swoop-last-prefix-number)
          ;; For the end of buffer error
          (point-max))))
   (helm-swoop--unveil-invisible-overlay))
@@ -314,7 +313,7 @@ If $linum is number, lines are separated by $linum"
       (goto-char (point-min))
       (let (($i 1))
         (insert (format "%s " $i))
-        (while (search-forward "\n" nil t)
+        (while (re-search-forward "\n" nil t)
           (incf $i)
           (insert (format "%s " $i)))
         ;; Delete empty lines
@@ -775,7 +774,7 @@ If $linum is number, lines are separated by $linum"
    (goto-char (point-at-bol))
    (save-excursion
      (goto-char (point-at-bol))
-     (or (search-forward "\n" nil t) (point-max)))
+     (or (re-search-forward "\n" nil t) (point-max)))
    $buf)
   (helm-swoop--unveil-invisible-overlay))
 
@@ -856,7 +855,7 @@ If $linum is number, lines are separated by $linum"
                   `((name . ,$buf)
                     (candidates . ,(funcall $func))
                     (action . ,$action)
-                    (header-line . "[C-c C-e] Edit mode")
+                    (header-line . ,(concat $buf "    [C-c C-e] Edit mode"))
                     (keymap . ,helm-multi-swoop-map))
                   $contents)))))
           $buffs)
