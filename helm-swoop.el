@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 1.3
+;; Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
@@ -131,6 +131,7 @@
 (defvar helm-swoop-prompt "Swoop: ")
 (defvar helm-swoop-last-point nil)
 (defvar helm-swoop-invisible-targets nil)
+(defvar helm-swoop-last-line-info nil)
 
 ;; Buffer local variables
 (defvar helm-swoop-cache)
@@ -291,7 +292,69 @@ This function needs to call after latest helm-swoop-line-overlay set."
           (with-current-buffer helm-swoop-target-buffer
             (delete-overlay helm-swoop-line-overlay)
             (helm-swoop--target-line-overlay-move))
-          (recenter))))))
+          (recenter)))
+      (setq helm-swoop-last-line-info
+            (cons helm-swoop-target-buffer $num)))))
+
+(defun helm-swoop--nearest-line ($target $list)
+  "Return the nearest number of $target out of $list."
+  (when (and $target $list)
+    (let ($result)
+      (cl-labels ((filter ($fn $elem $list)
+                          (let ($r)
+                            (mapc (lambda ($e)
+                                    (if (funcall $fn $elem $e)
+                                        (setq $r (cons $e $r))))
+                                  $list) $r)))
+        (if (eq 1 (length $list))
+            (setq $result (car $list))
+          (let* (($lt (car
+                       (sort (filter '> $target $list) '>)))
+                 ($gt (car
+                       (sort (filter '< $target $list) '<)))
+                 ($ltg (if $lt (- $target $lt)))
+                 ($gtg (if $gt (- $gt $target))))
+            (setq $result
+                  (cond ((memq $target $list) $target)
+                        ((and (not $lt) (not $gt)) nil)
+                        ((not $gtg) $lt)
+                        ((not $ltg) $gt)
+                        ((eq $ltg $gtg) $gt)
+                        ((< $ltg $gtg) $lt)
+                        ((> $ltg $gtg) $gt)
+                        (t 1))))))
+      $result)))
+
+(defun helm-swoop--keep-nearest-position (&optional $multi-buffer)
+  (with-helm-window
+    (let (($p (point-min)) $list $bound
+          $nearest-line $target-point
+          ($buf (buffer-name (car helm-swoop-last-line-info))))
+      (save-excursion
+        (goto-char $p)
+        (while (if $p (setq $p (re-search-forward (concat "^" $buf "$") nil t)))
+          (when (get-text-property (point-at-bol) 'helm-header)
+            (forward-char 1)
+            (setq $bound (next-single-property-change (point) 'helm-header))
+            (while (re-search-forward "^[0-9]+" $bound t)
+              (setq $list (cons
+                           (string-to-number (match-string 0))
+                           $list)))
+            (setq $nearest (helm-swoop--nearest-line
+                            (cdr helm-swoop-last-line-info)
+                            $list))
+            (goto-char $p)
+            (re-search-forward (concat "^"
+                                       (number-to-string $nearest)
+                                       "\\s-") $bound t)
+            (setq $target-point (point))
+            (setq $p nil))))
+      (when $target-point
+        (goto-char $target-point)
+        (helm-mark-current-line)
+        (if (equal helm-swoop-buffer (buffer-name (current-buffer)))
+            (helm-swoop--move-line-action)
+          (helm-multi-swoop--move-line-action))))))
 
 (defun helm-swoop--pattern-match ()
   "Overlay target words"
@@ -325,7 +388,7 @@ If $linum is number, lines are separated by $linum"
     $return))
 
 (defun helm-c-source-swoop ()
-  `((name . "Helm Swoop")
+  `((name . ,(buffer-name (current-buffer)))
     (init . (lambda ()
               (unless helm-swoop-cache
                 (with-current-buffer (helm-candidate-buffer 'local)
@@ -351,7 +414,7 @@ If $linum is number, lines are separated by $linum"
     ))
 
 (defun helm-c-source-swoop-multiline ($linum)
-  `((name . "Helm Swoop Multiline")
+  `((name . ,(buffer-name (current-buffer)))
 
     (candidates . ,(if helm-swoop-list-cache
                        (progn
@@ -399,6 +462,7 @@ If $linum is number, lines are separated by $linum"
   (ad-disable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
   (ad-activate 'helm-previous-line)
   (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
+  (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
   (setq helm-swoop-last-query helm-pattern)
   (mapc (lambda ($ov)
           (when (or (eq 'helm-swoop-target-line-face (overlay-get $ov 'face))
@@ -417,6 +481,8 @@ If $linum is number, lines are separated by $linum"
  is jumping line to line according to moving up and down the list."
   (setq helm-swoop-synchronizing-window (selected-window))
   (setq helm-swoop-last-point (cons (point) (buffer-name (current-buffer))))
+  (setq helm-swoop-last-line-info
+        (cons (current-buffer) (line-number-at-pos)))
   (unless (boundp 'helm-swoop-last-query)
     (set (make-local-variable 'helm-swoop-last-query) ""))
   (setq helm-swoop-target-buffer (current-buffer))
@@ -451,6 +517,7 @@ If $linum is number, lines are separated by $linum"
                           'helm-multi-swoop-previous-line-cycle)
         (ad-activate 'helm-move--previous-line-fn)
         (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
+        (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
         (cond ($query
                (if (string-match
                     "\\(\\^\\[0\\-9\\]\\+\\.\\)\\(.*\\)" $query)
@@ -794,7 +861,8 @@ If $linum is number, lines are separated by $linum"
           (helm-swoop--goto-line $num)
           (helm-multi-swoop--overlay-move $buf))
         (setq helm-multi-swoop-move-line-action-last-buffer $buf)
-        (recenter)))))
+        (recenter))
+      (setq helm-swoop-last-line-info (cons $buf $num)))))
 
 (defun helm-multi-swoop--get-marked-buffers ()
   (let ($list)
@@ -822,6 +890,8 @@ If $linum is number, lines are separated by $linum"
   (setq helm-swoop-last-point
         (or helm-multi-swoop-all-from-helm-swoop-last-point
             (cons (point) (buffer-name (current-buffer)))))
+  (setq helm-swoop-last-line-info
+        (cons (current-buffer) (line-number-at-pos)))
   (let (($buffs (or $buflist (helm-multi-swoop--get-marked-buffers)))
         $contents
         $preserve-position)
@@ -856,7 +926,8 @@ If $linum is number, lines are separated by $linum"
                     (candidates . ,(funcall $func))
                     (action . ,$action)
                     (header-line . ,(concat $buf "    [C-c C-e] Edit mode"))
-                    (keymap . ,helm-multi-swoop-map))
+                    (keymap . ,helm-multi-swoop-map)
+                    (requires-pattern . 2))
                   $contents)))))
           $buffs)
     (unwind-protect
@@ -874,6 +945,7 @@ If $linum is number, lines are separated by $linum"
                             'helm-multi-swoop-previous-line-cycle)
           (ad-activate 'helm-move--previous-line-fn)
           (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
+          (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
           (setq helm-swoop-line-overlay
                 (make-overlay (point) (point)))
           (overlay-put helm-swoop-line-overlay
@@ -911,6 +983,7 @@ If $linum is number, lines are separated by $linum"
                            'helm-multi-swoop-previous-line-cycle)
         (ad-activate 'helm-move--previous-line-fn)
         (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
+        (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
         (setq helm-multi-swoop-last-query helm-pattern)
         (helm-swoop--restore-unveiled-overlay)
         (setq helm-multi-swoop-query nil)
