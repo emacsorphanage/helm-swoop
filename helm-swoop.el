@@ -163,6 +163,9 @@
   (goto-char (point-min))
   (forward-line (1- $line)))
 
+(defsubst helm-swoop--recenter ()
+  (recenter (/ (window-height) 2)))
+
 (defsubst helm-swoop--delete-overlay ($identity &optional $beg $end)
   (or $beg (setq $beg (point-min)))
   (or $end (setq $end (point-max)))
@@ -292,7 +295,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
           (with-current-buffer helm-swoop-target-buffer
             (delete-overlay helm-swoop-line-overlay)
             (helm-swoop--target-line-overlay-move))
-          (recenter)))
+          (helm-swoop--recenter)))
       (setq helm-swoop-last-line-info
             (cons helm-swoop-target-buffer $num)))))
 
@@ -409,7 +412,7 @@ If $linum is number, lines are separated by $linum"
                                   (split-string helm-pattern " ") "\\|")
                        nil t)
                   (goto-char (match-beginning 0)))
-                (recenter)))
+                (helm-swoop--recenter)))
     (migemo) ;;? in exchange for those matches ^ $ [0-9] .*
     ))
 
@@ -434,7 +437,7 @@ If $linum is number, lines are separated by $linum"
                                   (split-string helm-pattern " ") "\\|")
                        nil t)
                   (goto-char (match-beginning 0)))
-                (recenter)))
+                (helm-swoop--recenter)))
     (multiline)
     (migemo)))
 
@@ -532,7 +535,7 @@ If $linum is number, lines are separated by $linum"
               ((setq $query (funcall helm-swoop-pre-input-function)))
               (t (setq $query "")))
         ;; First behavior
-        (recenter)
+        (helm-swoop--recenter)
         (move-beginning-of-line 1)
         (helm-swoop--target-line-overlay-move)
         ;; Execute helm
@@ -819,7 +822,7 @@ If $linum is number, lines are separated by $linum"
       (progn (forward-line 1)
              (when (eobp)
                (helm-beginning-of-buffer)
-               (recenter)))
+               (helm-swoop--recenter)))
     (let ((line-num (line-number-at-pos)))
       (helm-move--next-multi-line-fn)
       (when (eq line-num (line-number-at-pos))
@@ -861,7 +864,7 @@ If $linum is number, lines are separated by $linum"
           (helm-swoop--goto-line $num)
           (helm-multi-swoop--overlay-move $buf))
         (setq helm-multi-swoop-move-line-action-last-buffer $buf)
-        (recenter))
+        (helm-swoop--recenter))
       (setq helm-swoop-last-line-info (cons $buf $num)))))
 
 (defun helm-multi-swoop--get-marked-buffers ()
@@ -916,7 +919,7 @@ If $linum is number, lines are separated by $linum"
                                                helm-pattern " ") "\\|")
                                    nil t)
                               (goto-char (match-beginning 0)))
-                            (recenter)))))
+                            (helm-swoop--recenter)))))
                 (setq $preserve-position
                       (cons (cons $buf (point)) $preserve-position))
                 (setq
@@ -1333,7 +1336,7 @@ Last selected buffers will be applied to helm-multi-swoop.
                               (while (<= (setq $po (next-single-property-change $po 'face)) $poe)
                                 (when (eq 'helm-swoop-target-word-face (helm-swoop--get-at-face $po))
                                   (goto-char $po))))
-                            (recenter))))))
+                            (helm-swoop--recenter))))))
 
 (defun helm-multi-swoop-same-face-at-point (&optional $face)
   (interactive)
@@ -1352,7 +1355,7 @@ Last selected buffers will be applied to helm-multi-swoop.
                 (while (<= (setq $po (next-single-property-change $po 'face)) $poe)
                   (when (eq 'helm-swoop-target-word-face (helm-swoop--get-at-face $po))
                     (goto-char $po))))
-              (recenter))
+              (helm-swoop--recenter))
    :$buflist (helm-multi-swoop--get-buffer-list)))
 
 (provide 'helm-swoop)
