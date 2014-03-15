@@ -328,7 +328,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
                         (t 1))))))
       $result)))
 
-(defun helm-swoop--keep-nearest-position (&optional $multi-buffer)
+(defun helm-swoop--keep-nearest-position ()
   (with-helm-window
     (let (($p (point-min)) $list $bound
           $nearest-line $target-point
@@ -343,12 +343,12 @@ This function needs to call after latest helm-swoop-line-overlay set."
               (setq $list (cons
                            (string-to-number (match-string 0))
                            $list)))
-            (setq $nearest (helm-swoop--nearest-line
+            (setq $nearest-line (helm-swoop--nearest-line
                             (cdr helm-swoop-last-line-info)
                             $list))
             (goto-char $p)
             (re-search-forward (concat "^"
-                                       (number-to-string $nearest)
+                                       (number-to-string $nearest-line)
                                        "\\s-") $bound t)
             (setq $target-point (point))
             (setq $p nil))))
