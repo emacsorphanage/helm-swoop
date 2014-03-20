@@ -169,6 +169,7 @@
 (defsubst helm-swoop--delete-overlay ($identity &optional $beg $end)
   (or $beg (setq $beg (point-min)))
   (or $end (setq $end (point-max)))
+  (overlay-recenter $end)
   (mapc (lambda ($o)
           (if (overlay-get $o $identity)
               (delete-overlay $o)))
@@ -244,6 +245,7 @@
                 ;; For caret begging match
                 (if (string-match "^\\^\\[0\\-9\\]\\+\\.\\(.+\\)" $wd)
                     (setq $wd (concat "^" (match-string 1 $wd))))
+                (overlay-recenter (point-max))
                 (while (re-search-forward $wd nil t)
                   (setq $o (make-overlay (match-beginning 0) (match-end 0)))
                   (overlay-put $o 'face 'helm-swoop-target-word-face)
@@ -1138,6 +1140,7 @@ Last selected buffers will be applied to helm-multi-swoop.
         (save-excursion
           (goto-char (point-min))
           (let (($beg (point)) $end)
+            (overlay-recenter (point-max))
             (while (setq $beg (text-property-any $beg (point-max)
                                               'face 'helm-source-header))
               (setq $end (next-single-property-change $beg 'face))
