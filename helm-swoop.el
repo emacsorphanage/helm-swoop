@@ -78,8 +78,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
+(require 'cl-lib)
 (require 'helm)
 (require 'helm-utils)
 
@@ -160,13 +159,14 @@
   "This function can pre-input keywords when helm-swoop invoked")
 
 (defun helm-swoop-pre-input-optimize ($query)
-  (let (($regexp (list '("\+" . "\\\\+")
-                       '("\*" . "\\\\*")
-                       '("\#" . "\\\\#"))))
-    (mapc (lambda ($r)
-            (setq $query (replace-regexp-in-string (car $r) (cdr $r) $query)))
-          $regexp)
-    $query))
+  (when $query
+    (let (($regexp (list '("\+" . "\\\\+")
+                         '("\*" . "\\\\*")
+                         '("\#" . "\\\\#"))))
+      (mapc (lambda ($r)
+              (setq $query (replace-regexp-in-string (car $r) (cdr $r) $query)))
+            $regexp)
+      $query)))
 
 (defsubst helm-swoop--goto-line ($line)
   (goto-char (point-min))
