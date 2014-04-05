@@ -475,6 +475,12 @@ If $linum is number, lines are separated by $linum"
   (ad-activate 'helm-next-line)
   (ad-disable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
   (ad-activate 'helm-previous-line)
+  (ad-disable-advice 'helm-move--next-line-fn 'around
+                     'helm-multi-swoop-next-line-cycle)
+  (ad-activate 'helm-move--next-line-fn)
+  (ad-disable-advice 'helm-move--previous-line-fn 'around
+                     'helm-multi-swoop-previous-line-cycle)
+  (ad-activate 'helm-move--previous-line-fn)
   (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
   (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
   (setq helm-swoop-last-query helm-pattern)
