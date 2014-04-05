@@ -532,6 +532,9 @@ If $linum is number, lines are separated by $linum"
         (ad-activate 'helm-move--previous-line-fn)
         (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
         (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
+        (unless (and (symbolp 'helm-match-plugin-mode)
+                     (symbol-value 'helm-match-plugin-mode))
+          (helm-match-plugin-mode 1))
         (cond ($query
                (if (string-match
                     "\\(\\^\\[0\\-9\\]\\+\\.\\)\\(.*\\)" $query)
@@ -961,6 +964,9 @@ If $linum is number, lines are separated by $linum"
           (ad-activate 'helm-move--previous-line-fn)
           (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
           (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
+          (unless (and (symbolp 'helm-match-plugin-mode)
+                       (symbol-value 'helm-match-plugin-mode))
+            (helm-match-plugin-mode 1))
           (setq helm-swoop-line-overlay
                 (make-overlay (point) (point)))
           (overlay-put helm-swoop-line-overlay
