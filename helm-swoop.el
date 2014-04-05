@@ -391,7 +391,7 @@ If $linum is number, lines are separated by $linum"
       (let (($i 1))
         (insert (format "%s " $i))
         (while (re-search-forward "\n" nil t)
-          (incf $i)
+          (cl-incf $i)
           (insert (format "%s " $i)))
         ;; Delete empty lines
         (unless $linum
@@ -766,7 +766,7 @@ If $linum is number, lines are separated by $linum"
     (with-current-buffer helm-swoop-edit-target-buffer
       ;; Replace from the end of buffer
       (save-excursion
-      (loop for ($k . $v) in $list
+      (cl-loop for ($k . $v) in $list
             do (progn
                  (goto-char (point-min))
                  (delete-region (point-at-bol $k) (point-at-eol $k))
@@ -1285,7 +1285,7 @@ Last selected buffers will be applied to helm-multi-swoop.
             (with-current-buffer (car $x)
               (unless buffer-read-only
                 (save-excursion
-                  (loop for ($k . $v) in (cdr $x)
+                  (cl-loop for ($k . $v) in (cdr $x)
                         do (progn
                              (goto-char (point-min))
                              (delete-region (point-at-bol $k) (point-at-eol $k))
