@@ -300,15 +300,16 @@ This function needs to call after latest helm-swoop-line-overlay set."
            ($num (when (string-match "^[0-9]+" $key)
                    (string-to-number (match-string 0 $key)))))
       ;; Synchronizing line position
-      (with-selected-window helm-swoop-synchronizing-window
-        (progn
-          (helm-swoop--goto-line $num)
-          (with-current-buffer helm-swoop-target-buffer
-            (delete-overlay helm-swoop-line-overlay)
-            (helm-swoop--target-line-overlay-move))
-          (helm-swoop--recenter)))
-      (setq helm-swoop-last-line-info
-            (cons helm-swoop-target-buffer $num)))))
+      (when (and $key $num)
+        (with-selected-window helm-swoop-synchronizing-window
+          (progn
+            (helm-swoop--goto-line $num)
+            (with-current-buffer helm-swoop-target-buffer
+              (delete-overlay helm-swoop-line-overlay)
+              (helm-swoop--target-line-overlay-move))
+            (helm-swoop--recenter)))
+        (setq helm-swoop-last-line-info
+              (cons helm-swoop-target-buffer $num))))))
 
 (defun helm-swoop--nearest-line ($target $list)
   "Return the nearest number of $target out of $list."
