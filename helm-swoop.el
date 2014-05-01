@@ -344,7 +344,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
   (with-helm-window
     (let (($p (point-min)) $list $bound
           $nearest-line $target-point
-          ($buf (buffer-name (car helm-swoop-last-line-info))))
+          ($buf (rx-to-string (buffer-name (car helm-swoop-last-line-info)) t)))
       (save-excursion
         (goto-char $p)
         (while (if $p (setq $p (re-search-forward (concat "^" $buf "$") nil t)))
