@@ -154,9 +154,10 @@
     (delq nil $map))
   "Keymap for helm-swoop")
 
-(defvar helm-swoop-pre-input-function
+(defcustom helm-swoop-pre-input-function
   (lambda () (thing-at-point 'symbol))
-  "This function can pre-input keywords when helm-swoop invoked")
+  "This function can pre-input keywords when helm-swoop invoked"
+  :group 'helm-swoop :type 'function)
 
 (defun helm-swoop-pre-input-optimize ($query)
   (when $query
