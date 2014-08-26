@@ -508,7 +508,7 @@ If $linum is number, lines are separated by $linum"
   (unless (boundp 'helm-swoop-last-query)
     (set (make-local-variable 'helm-swoop-last-query) ""))
   (setq helm-swoop-target-buffer (current-buffer))
-  (helm-swoop--set-prefix $multiline)
+  (helm-swoop--set-prefix (prefix-numeric-value $multiline))
   ;; Overlay
   (setq helm-swoop-line-overlay (make-overlay (point) (point)))
   (overlay-put helm-swoop-line-overlay
