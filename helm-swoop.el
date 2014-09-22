@@ -240,6 +240,13 @@
          (point-max))))
   (helm-swoop--unveil-invisible-overlay))
 
+(defun helm-swoop--validate-regexp (regexp)
+  (condition-case nil
+      (progn
+        (string-match-p regexp "")
+        t)
+    (invalid-regexp nil)))
+
 (defun helm-swoop--target-word-overlay ($identity &optional $threshold)
   (interactive)
   (or $threshold (setq $threshold 2))
@@ -247,7 +254,7 @@
     (let (($pat (split-string helm-pattern " "))
           $o)
       (mapc (lambda ($wd)
-              (when (< $threshold (length $wd))
+              (when (and (helm-swoop--validate-regexp $wd) (< $threshold (length $wd)))
                 (goto-char (point-min))
                 ;; Optional require migemo.el & helm-migemo.el
                 (if (and (featurep 'migemo) (featurep 'helm-migemo))
