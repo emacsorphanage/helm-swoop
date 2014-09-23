@@ -240,6 +240,13 @@
          (point-max))))
   (helm-swoop--unveil-invisible-overlay))
 
+(defun helm-swoop--validate-regexp (regexp)
+  (condition-case nil
+      (progn
+        (string-match-p regexp "")
+        t)
+    (invalid-regexp nil)))
+
 (defun helm-swoop--target-word-overlay ($identity &optional $threshold)
   (interactive)
   (or $threshold (setq $threshold 2))
@@ -247,7 +254,7 @@
     (let (($pat (split-string helm-pattern " "))
           $o)
       (mapc (lambda ($wd)
-              (when (< $threshold (length $wd))
+              (when (and (helm-swoop--validate-regexp $wd) (< $threshold (length $wd)))
                 (goto-char (point-min))
                 ;; Optional require migemo.el & helm-migemo.el
                 (if (and (featurep 'migemo) (featurep 'helm-migemo))
@@ -256,10 +263,15 @@
                 (if (string-match "^\\^\\[0\\-9\\]\\+\\.\\(.+\\)" $wd)
                     (setq $wd (concat "^" (match-string 1 $wd))))
                 (overlay-recenter (point-max))
-                (while (re-search-forward $wd nil t)
-                  (setq $o (make-overlay (match-beginning 0) (match-end 0)))
-                  (overlay-put $o 'face 'helm-swoop-target-word-face)
-                  (overlay-put $o $identity t))))
+                (let (finish)
+                  (while (and (not finish) (re-search-forward $wd nil t))
+                    (if (= (match-beginning 0) (match-end 0))
+                        (forward-char 1)
+                      (setq $o (make-overlay (match-beginning 0) (match-end 0)))
+                      (overlay-put $o 'face 'helm-swoop-target-word-face)
+                      (overlay-put $o $identity t))
+                    (when (eobp)
+                      (setq finish t))))))
             $pat))))
 
 (defun helm-swoop--restore-unveiled-overlay ()
