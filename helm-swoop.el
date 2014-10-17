@@ -133,10 +133,10 @@
 (defvar helm-swoop-last-line-info nil)
 
 ;; Buffer local variables
-(defvar helm-swoop-cache)
-(defvar helm-swoop-list-cache)
-(defvar helm-swoop-last-query)         ; Last search query for resume
-(defvar helm-swoop-last-prefix-number) ; For multiline highlight
+(defvar helm-swoop-cache nil)
+(defvar helm-swoop-list-cache nil)
+(defvar helm-swoop-last-query "")        ; Last search query for resume
+(defvar helm-swoop-last-prefix-number 1) ; For multiline highlight
 
 ;; Global variables
 (defvar helm-swoop-synchronizing-window nil
