@@ -432,11 +432,13 @@ If $linum is number, lines are separated by $linum"
                 (helm-swoop--goto-line
                  (when (string-match "^[0-9]+" $line)
                    (string-to-number (match-string 0 $line))))
-                (when (re-search-forward
-                       (mapconcat 'identity
-                                  (split-string helm-pattern " ") "\\|")
-                       nil t)
-                  (goto-char (match-beginning 0)))
+                (let (($regex (mapconcat 'identity
+                                         (split-string helm-pattern " ")
+                                         "\\|")))
+                  (when (or (and (and (featurep 'migemo) (featurep 'helm-migemo))
+                                 (migemo-forward $regex nil t))
+                            (re-search-forward $regex nil t))
+                    (goto-char (match-beginning 0))))
                 (helm-swoop--recenter)))
     (migemo) ;;? in exchange for those matches ^ $ [0-9] .*
     ))
