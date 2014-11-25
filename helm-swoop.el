@@ -58,6 +58,14 @@
 
 ;; ;; If nil, you can slightly boost invoke speed in exchange for text color
 ;; (setq helm-swoop-speed-or-color nil)
+
+;; ;; Go to the opposite side of line from the end or beginning of line
+;; (setq helm-swoop-move-to-line-cycle t)
+
+;; ;; Optional face for line numbers
+;; ;; Face name is `helm-swoop-line-number-face`
+;; (setq helm-swoop-use-line-number-face t)
+
 ;; ----------------------------------------------------------------
 
 ;; * `M-x helm-swoop` when region active
@@ -104,17 +112,20 @@
   :group 'helm-swoop)
 (defface helm-swoop-line-number-face
   '((t (:foreground "#999999")))
-  "Face for each line number"
+  "Face for line numbers"
   :group 'helm-swoop)
 
 (defcustom helm-swoop-speed-or-color nil
  "If nil, you can slightly boost invoke speed in exchange for text color"
  :group 'helm-swoop :type 'boolean)
 (defcustom helm-swoop-use-line-number-face nil
-  "Use face to each line number on helm-swoop buffer"
+  "Use face to line numbers on helm-swoop buffer"
   :group 'helm-swoop :type 'boolean)
 (defcustom helm-swoop-split-with-multiple-windows nil
  "Split window when having multiple windows open"
+ :group 'helm-swoop :type 'boolean)
+(defcustom helm-swoop-move-to-line-cycle t
+ "Return to the opposite side of line"
  :group 'helm-swoop :type 'boolean)
 (defcustom helm-swoop-split-direction 'split-window-vertically
  "Split direction"
@@ -866,24 +877,27 @@ If $linum is number, lines are separated by $linum"
 
 (defadvice helm-move--next-line-fn (around helm-multi-swoop-next-line-cycle disable)
   (if (not (helm-pos-multiline-p))
-      (progn (forward-line 1)
-             (when (eobp)
-               (helm-beginning-of-buffer)
-               (helm-swoop--recenter)))
+      (if (eq (point-max) (save-excursion (forward-line 1) (point)))
+          (when helm-swoop-move-to-line-cycle
+            (helm-beginning-of-buffer)
+            (helm-swoop--recenter))
+        (forward-line 1))
     (let ((line-num (line-number-at-pos)))
       (helm-move--next-multi-line-fn)
-      (when (eq line-num (line-number-at-pos))
+      (when (and helm-swoop-move-to-line-cycle
+                 (eq line-num (line-number-at-pos)))
         (helm-beginning-of-buffer)))))
 
-(defadvice helm-move--previous-line-fn
-  (around helm-multi-swoop-previous-line-cycle disable)
+(defadvice helm-move--previous-line-fn (around helm-multi-swoop-previous-line-cycle disable)
   (if (not (helm-pos-multiline-p))
       (forward-line -1)
     (helm-move--previous-multi-line-fn))
-  (when (helm-pos-header-line-p)
-    (when (eq (point) (save-excursion (forward-line -1) (point)))
-      (helm-end-of-buffer)
-      (and (helm-pos-multiline-p) (helm-move--previous-multi-line-fn)))))
+  (when (and (helm-pos-header-line-p)
+             (eq (point) (save-excursion (forward-line -1) (point))))
+    (when helm-swoop-move-to-line-cycle
+      (helm-end-of-buffer))
+    (when (helm-pos-multiline-p)
+      (helm-move--previous-multi-line-fn))))
 
 (defun helm-multi-swoop--overlay-move (&optional $buf)
   (move-overlay
