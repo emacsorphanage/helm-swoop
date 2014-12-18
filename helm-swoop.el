@@ -680,22 +680,33 @@ If $linum is number, lines are separated by $linum"
 
 (defun helm-swoop-caret-match (&optional $resume)
   (interactive)
-  (if (and (string-match "^Swoop\\:\s" ;; depend on helm-swoop-prompt
-                         (buffer-substring-no-properties
-                          (point-min) (point-max)) )
-           (eq (point) 8))
-      (progn
-        (if $resume
-            (insert $resume) ;; NEED FIX #1 to appear as a "^"
-          (insert "^[0-9]+."))
-        (goto-char (point-min))
-        (re-search-forward "^Swoop\\:\s\\(\\^\\[0\\-9\\]\\+\\.\\)" nil t)
-        (let (($o (make-overlay (match-beginning 1) (match-end 1))))
-          (overlay-put $o 'face 'helm-swoop-target-word-face)
-          (overlay-put $o 'modification-hooks '(helm-swoop--caret-match-delete))
-          (overlay-put $o 'display "^")
-          (overlay-put $o 'evaporate t)))
-    (if (minibufferp) (insert "^"))))
+  (let* (($prompt helm-swoop-prompt) ;; Accept change of the variable
+         ($line-number-regexp "^[0-9]+.")
+         ($prompt-regexp
+          (funcall `(lambda ()
+                      (rx bol ,$prompt))))
+         ($prompt-regexp-with-line-number
+          (funcall `(lambda ()
+                      (rx bol ,$prompt (group ,$line-number-regexp)))))
+         ($disguise-caret
+          (lambda ()
+            (save-excursion
+              (goto-char (point-min))
+              (re-search-forward $prompt-regexp-with-line-number nil t)
+              (let (($o (make-overlay (match-beginning 1) (match-end 1))))
+                (overlay-put $o 'face 'helm-swoop-target-word-face)
+                (overlay-put $o 'modification-hooks '(helm-swoop--caret-match-delete))
+                (overlay-put $o 'display "^")
+                (overlay-put $o 'evaporate t))))))
+    (if (and (minibufferp)
+             (string-match $prompt-regexp
+                           (buffer-substring-no-properties
+                            (point-min) (point-max)))
+             (eq (point) (+ 1 (length helm-swoop-prompt))))
+        (progn
+          (insert $line-number-regexp)
+          (funcall $disguise-caret))
+      (insert "^"))))
 
 (unless (featurep 'helm-migemo)
   (define-key helm-map (kbd "^") 'helm-swoop-caret-match))
