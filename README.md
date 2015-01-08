@@ -99,6 +99,28 @@ Skip select phase and apply last selected buffers, if you have done helm-multi-s
 
 ```
 
+#### Configure pre-input search query
+
+By default, helm-swoop uses search query at the cursor.
+You can configure this behavior by setting `helm-swoop-pre-input-function` on your own.
+
+i.e.
+
+```elisp
+;; use search query at the cursor  (default)
+(setq helm-swoop-pre-input-function
+      (lambda () (thing-at-point 'symbol)))
+
+;; disable pre-input
+(setq helm-swoop-pre-input-function
+      (lambda () ""))
+
+;; match only for simbol
+(setq helm-swoop-pre-input-function
+      (lambda () (format "\\_<%s\\_> " (thing-at-point 'symbol))))
+
+```
+
 ### Require
 
 [helm.el](https://github.com/emacs-helm/helm)
