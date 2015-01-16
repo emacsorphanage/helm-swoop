@@ -966,7 +966,8 @@ If $linum is number, lines are separated by $linum"
             (cons (point) (buffer-name (current-buffer)))))
   (setq helm-swoop-last-line-info
         (cons (current-buffer) (line-number-at-pos)))
-  (let (($buffs (or $buflist (helm-multi-swoop--get-marked-buffers)))
+  (let (($buffs (or $buflist (helm-multi-swoop--get-marked-buffers)
+                    (error "No buffer selected")))
         $contents
         $preserve-position)
     (setq helm-multi-swoop-last-selected-buffers $buffs)
