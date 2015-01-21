@@ -463,6 +463,15 @@ If $linum is number, lines are separated by $linum"
     (migemo) ;;? in exchange for those matches ^ $ [0-9] .*
     ))
 
+(defun helm-c-source-multi-swoop ($buf $func $action)
+  `((name . ,$buf)
+    (candidates . ,(funcall $func))
+    (action . ,$action)
+    (header-line . ,(concat $buf "    [C-c C-e] Edit mode"))
+    (keymap . ,helm-multi-swoop-map)
+    (requires-pattern . 2)
+    (migemo)))
+
 (defun helm-c-source-swoop-multiline ($linum)
   `((name . ,(buffer-name (current-buffer)))
 
@@ -997,12 +1006,7 @@ If $linum is number, lines are separated by $linum"
                 (setq
                  $contents
                  (cons
-                  `((name . ,$buf)
-                    (candidates . ,(funcall $func))
-                    (action . ,$action)
-                    (header-line . ,(concat $buf "    [C-c C-e] Edit mode"))
-                    (keymap . ,helm-multi-swoop-map)
-                    (requires-pattern . 2))
+                  (helm-c-source-multi-swoop $buf $func $action)
                   $contents)))))
           $buffs)
     (unwind-protect
