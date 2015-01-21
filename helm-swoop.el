@@ -1180,7 +1180,8 @@ Last selected buffers will be applied to helm-multi-swoop.
   (helm-swoop--restore)
   (delete-overlay helm-swoop-line-overlay)
   (setq helm-multi-swoop-all-from-helm-swoop-last-point helm-swoop-last-point)
-  (run-with-timer 0 nil (lambda () (helm-multi-swoop-all helm-pattern)))
+  (let (($query helm-pattern))
+    (run-with-timer 0 nil (lambda () (helm-multi-swoop-all $query))))
   (helm-exit-minibuffer))
 
 (defadvice helm-resume (around helm-multi-swoop-resume activate)
