@@ -325,6 +325,12 @@ This function needs to call after latest helm-swoop-line-overlay set."
     (when (called-interactively-p 'any)
       (helm-swoop--move-line-action))))
 
+(defadvice helm-toggle-visible-mark (around helm-swoop-toggle-visible-mark disable)
+  (let ((helm-move-to-line-cycle-in-source t))
+    ad-do-it
+    (when (called-interactively-p 'any)
+      (helm-swoop--move-line-action))))
+
 (defun helm-swoop--move-line-action ()
   (with-helm-window
     (let* (($key (helm-swoop--get-string-at-line))
@@ -520,6 +526,8 @@ If $linum is number, lines are separated by $linum"
   (ad-activate 'helm-next-line)
   (ad-disable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
   (ad-activate 'helm-previous-line)
+  (ad-disable-advice 'helm-toggle-visible-mark 'around 'helm-swoop-toggle-visible-mark)
+  (ad-activate 'helm-toggle-visible-mark)
   (ad-disable-advice 'helm-move--next-line-fn 'around
                      'helm-multi-swoop-next-line-cycle)
   (ad-activate 'helm-move--next-line-fn)
@@ -575,6 +583,8 @@ If $linum is number, lines are separated by $linum"
         (ad-activate 'helm-next-line)
         (ad-enable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
         (ad-activate 'helm-previous-line)
+	(ad-enable-advice 'helm-toggle-visible-mark 'around 'helm-swoop-toggle-visible-mark)		
+	(ad-activate 'helm-toggle-visible-mark)
         (ad-enable-advice 'helm-move--next-line-fn 'around
                           'helm-multi-swoop-next-line-cycle)
         (ad-activate 'helm-move--next-line-fn)
