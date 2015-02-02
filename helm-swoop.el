@@ -153,6 +153,7 @@
 ;; Buffer local variables
 (defvar helm-swoop-cache)
 (defvar helm-swoop-list-cache)
+(defvar helm-swoop-pattern)            ; Keep helm-pattern value
 (defvar helm-swoop-last-query)         ; Last search query for resume
 (defvar helm-swoop-last-prefix-number) ; For multiline highlight
 
@@ -411,6 +412,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
 (defun helm-swoop--pattern-match ()
   "Overlay target words"
   (with-helm-window
+    (setq helm-swoop-pattern helm-pattern)
     (when (< 2 (length helm-pattern))
       (with-selected-window helm-swoop-synchronizing-window
         (helm-swoop--delete-overlay 'target-buffer)
@@ -536,7 +538,7 @@ If $linum is number, lines are separated by $linum"
   (ad-activate 'helm-move--previous-line-fn)
   (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
   (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
-  (setq helm-swoop-last-query helm-pattern)
+  (setq helm-swoop-last-query helm-swoop-pattern)
   (mapc (lambda ($ov)
           (when (or (eq 'helm-swoop-target-line-face (overlay-get $ov 'face))
                     (eq 'helm-swoop-target-line-block-face
@@ -1076,7 +1078,7 @@ If $linum is number, lines are separated by $linum"
         (ad-activate 'helm-move--previous-line-fn)
         (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
         (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
-        (setq helm-multi-swoop-last-query helm-pattern)
+        (setq helm-multi-swoop-last-query helm-swoop-pattern)
         (helm-swoop--restore-unveiled-overlay)
         (setq helm-multi-swoop-query nil)
         (setq helm-multi-swoop-all-from-helm-swoop-last-point nil)
