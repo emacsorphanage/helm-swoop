@@ -115,7 +115,7 @@ i.e.
 (setq helm-swoop-pre-input-function
       (lambda () ""))
 
-;; match only for simbol
+;; match only for symbol
 (setq helm-swoop-pre-input-function
       (lambda () (format "\\_<%s\\_> " (thing-at-point 'symbol))))
 

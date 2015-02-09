@@ -585,8 +585,8 @@ If $linum is number, lines are separated by $linum"
         (ad-activate 'helm-next-line)
         (ad-enable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
         (ad-activate 'helm-previous-line)
-	(ad-enable-advice 'helm-toggle-visible-mark 'around 'helm-swoop-toggle-visible-mark)		
-	(ad-activate 'helm-toggle-visible-mark)
+        (ad-enable-advice 'helm-toggle-visible-mark 'around 'helm-swoop-toggle-visible-mark)
+        (ad-activate 'helm-toggle-visible-mark)
         (ad-enable-advice 'helm-move--next-line-fn 'around
                           'helm-multi-swoop-next-line-cycle)
         (ad-activate 'helm-move--next-line-fn)
@@ -1035,7 +1035,7 @@ If $linum is number, lines are separated by $linum"
           (ad-enable-advice 'helm-previous-line 'around
                             'helm-multi-swoop-previous-line)
           (ad-activate 'helm-previous-line)
-	  (ad-enable-advice 'helm-toggle-visible-mark 'around
+          (ad-enable-advice 'helm-toggle-visible-mark 'around
                             'helm-multi-swoop-toggle-visible-mark)
           (ad-activate 'helm-toggle-visible-mark)
           (ad-enable-advice 'helm-move--next-line-fn 'around
@@ -1079,7 +1079,7 @@ If $linum is number, lines are separated by $linum"
         (ad-disable-advice 'helm-previous-line 'around
                            'helm-multi-swoop-previous-line)
         (ad-activate 'helm-previous-line)
-	(ad-disable-advice 'helm-toggle-visible-mark 'around
+        (ad-disable-advice 'helm-toggle-visible-mark 'around
                            'helm-multi-swoop-toggle-visible-mark)
         (ad-activate 'helm-toggle-visible-mark)
         (ad-disable-advice 'helm-move--next-line-fn 'around
