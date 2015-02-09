@@ -906,6 +906,12 @@ If $linum is number, lines are separated by $linum"
     (when (called-interactively-p 'any)
       (helm-multi-swoop--move-line-action))))
 
+(defadvice helm-toggle-visible-mark (around helm-multi-swoop-toggle-visible-mark disable)
+  (let ((helm-move-to-line-cycle-in-source nil))
+    ad-do-it
+    (when (called-interactively-p 'any)
+      (helm-multi-swoop--move-line-action))))
+
 (defadvice helm-move--next-line-fn (around helm-multi-swoop-next-line-cycle disable)
   (if (not (helm-pos-multiline-p))
       (if (eq (point-max) (save-excursion (forward-line 1) (point)))
@@ -1029,6 +1035,9 @@ If $linum is number, lines are separated by $linum"
           (ad-enable-advice 'helm-previous-line 'around
                             'helm-multi-swoop-previous-line)
           (ad-activate 'helm-previous-line)
+	  (ad-enable-advice 'helm-toggle-visible-mark 'around
+                            'helm-multi-swoop-toggle-visible-mark)
+          (ad-activate 'helm-toggle-visible-mark)
           (ad-enable-advice 'helm-move--next-line-fn 'around
                             'helm-multi-swoop-next-line-cycle)
           (ad-activate 'helm-move--next-line-fn)
@@ -1070,6 +1079,9 @@ If $linum is number, lines are separated by $linum"
         (ad-disable-advice 'helm-previous-line 'around
                            'helm-multi-swoop-previous-line)
         (ad-activate 'helm-previous-line)
+	(ad-disable-advice 'helm-toggle-visible-mark 'around
+                           'helm-multi-swoop-toggle-visible-mark)
+        (ad-activate 'helm-toggle-visible-mark)
         (ad-disable-advice 'helm-move--next-line-fn 'around
                            'helm-multi-swoop-next-line-cycle)
         (ad-activate 'helm-move--next-line-fn)
