@@ -120,7 +120,9 @@ i.e.
       (lambda () (format "\\_<%s\\_> " (thing-at-point 'symbol))))
       
 ;; Always use the previous search for helm
-(setq helm-swoop-pre-input-function (lambda () helm-swoop-pattern))
+(setq helm-swoop-pre-input-function
+      (lambda () (if (boundp 'helm-swoop-pattern)
+                     helm-swoop-pattern "")))
 
 ;; If there is no symbol at the cursor, use the last used words instead.
 (setq helm-swoop-pre-input-function
