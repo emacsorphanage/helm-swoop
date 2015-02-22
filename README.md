@@ -118,7 +118,17 @@ i.e.
 ;; match only for symbol
 (setq helm-swoop-pre-input-function
       (lambda () (format "\\_<%s\\_> " (thing-at-point 'symbol))))
+      
+;; Always use the previous search for helm
+(setq helm-swoop-pre-input-function (lambda () helm-swoop-pattern))
 
+;; If there is no symbol at the cursor, use the last used words instead.
+(setq helm-swoop-pre-input-function
+      (lambda ()
+        (let (($pre-input (thing-at-point 'symbol)))
+          (if (eq (length $pre-input) 0)
+              helm-swoop-pattern ;; this variable keeps the last used words
+            $pre-input))))
 ```
 
 ### Require
