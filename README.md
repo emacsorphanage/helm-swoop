@@ -119,7 +119,7 @@ i.e.
 (setq helm-swoop-pre-input-function
       (lambda () (format "\\_<%s\\_> " (thing-at-point 'symbol))))
       
-;; Always use the previous search for helm
+;; Always use the previous search for helm. Remember C-<backspace> will delete entire line
 (setq helm-swoop-pre-input-function
       (lambda () (if (boundp 'helm-swoop-pattern)
                      helm-swoop-pattern "")))
