@@ -78,6 +78,10 @@ Skip select phase and apply last selected buffers, if you have done helm-multi-s
 ;; When doing evil-search, hand the word over to helm-swoop
 ;; (define-key evil-motion-state-map (kbd "M-i") 'helm-swoop-from-evil-search)
 
+;; Move up and down like isearch
+(define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
+(define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
+
 ;; Save buffer when helm-multi-swoop-edit complete
 (setq helm-multi-swoop-edit-save t)
 
@@ -118,7 +122,7 @@ i.e.
 ;; match only for symbol
 (setq helm-swoop-pre-input-function
       (lambda () (format "\\_<%s\\_> " (thing-at-point 'symbol))))
-      
+
 ;; Always use the previous search for helm. Remember C-<backspace> will delete entire line
 (setq helm-swoop-pre-input-function
       (lambda () (if (boundp 'helm-swoop-pattern)
