@@ -1,3 +1,5 @@
+[![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
+
 List match lines to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
 
 ![helm-swoop](https://raw.githubusercontent.com/ShingoFukuyama/images/master/helm-swoop.gif)
@@ -142,3 +144,10 @@ i.e.
 ### Require
 
 [helm.el](https://github.com/emacs-helm/helm)
+
+
+
+[melpa-link]: http://melpa.org/#/helm-swoop
+[melpa-stable-link]: http://stable.melpa.org/#/helm-swoop
+[melpa-badge]: http://melpa.org/packages/helm-swoop-badge.svg
+[melpa-stable-badge]: http://stable.melpa.org/packages/helm-swoop-badge.svg
