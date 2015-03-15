@@ -173,6 +173,12 @@
     (delq nil $map))
   "Keymap for helm-swoop")
 
+(defvar helm-multi-swoop-map
+  (let (($map (make-sparse-keymap)))
+    (set-keymap-parent $map helm-map)
+    (define-key $map (kbd "C-c C-e") 'helm-multi-swoop-edit)
+    (delq nil $map)))
+
 (defcustom helm-swoop-pre-input-function
   (lambda () (thing-at-point 'symbol))
   "This function can pre-input keywords when helm-swoop invoked"
@@ -884,12 +890,6 @@ If $linum is number, lines are separated by $linum"
 (defvar helm-multi-swoop-all-from-helm-swoop-last-point nil
   "For the last position, when helm-multi-swoop-all-from-helm-swoop canceled")
 (defvar helm-multi-swoop-move-line-action-last-buffer nil)
-
-(defvar helm-multi-swoop-map
-  (let (($map (make-sparse-keymap)))
-    (set-keymap-parent $map helm-map)
-    (define-key $map (kbd "C-c C-e") 'helm-multi-swoop-edit)
-    (delq nil $map)))
 
 (defvar helm-multi-swoop-buffers-map
   (let (($map (make-sparse-keymap)))
