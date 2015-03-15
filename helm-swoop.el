@@ -518,6 +518,7 @@ If $linum is number, lines are separated by $linum"
             (or $multiline 1)) ;; $multiline is for resume
     (set (make-local-variable 'helm-swoop-last-prefix-number)
          (or $multiline 1))))
+(helm-swoop--set-prefix) ;; Silence error "Warning: reference to free variable"
 
 ;; Delete cache when modified file is saved
 (defun helm-swoop--clear-cache ()
@@ -705,7 +706,7 @@ If $linum is number, lines are separated by $linum"
       (- $end $beg $len) ;; Unused argument? To avoid byte compile error
     (delete-region (overlay-start $o) (1- (overlay-end $o)))))
 
-(defun helm-swoop-caret-match (&optional $resume)
+(defun helm-swoop-caret-match (&optional _$resume)
   (interactive)
   (let* (($prompt helm-swoop-prompt) ;; Accept change of the variable
          ($line-number-regexp "^[0-9]+.")
