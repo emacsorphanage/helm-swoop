@@ -426,6 +426,8 @@ This function needs to call after latest helm-swoop-line-overlay set."
   (with-helm-window
     (setq helm-swoop-pattern helm-pattern)
     (when (< 2 (length helm-pattern))
+      (helm-swoop--delete-overlay 'target-buffer)
+      (helm-swoop--target-word-overlay 'target-buffer)
       (with-selected-window helm-swoop-synchronizing-window
         (helm-swoop--delete-overlay 'target-buffer)
         (helm-swoop--target-word-overlay 'target-buffer)))))
