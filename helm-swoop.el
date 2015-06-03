@@ -226,8 +226,8 @@
 
 ;;;###autoload
 (defun helm-swoop-back-to-last-point (&optional $cancel)
-  (interactive)
   "Go back to last position where `helm-swoop' was called"
+  (interactive)
   (if helm-swoop-last-point
       (let (($po (point)))
         (switch-to-buffer (cdr helm-swoop-last-point))
@@ -565,10 +565,10 @@ If $linum is number, lines are separated by $linum"
 
 ;;;###autoload
 (cl-defun helm-swoop (&key $query $source ($multiline current-prefix-arg))
-  (interactive)
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
  is jumping line to line according to moving up and down the list."
+  (interactive)
   (setq helm-swoop-synchronizing-window (selected-window))
   (setq helm-swoop-last-point (cons (point) (buffer-name (current-buffer))))
   (setq helm-swoop-last-line-info
@@ -1135,7 +1135,6 @@ If $linum is number, lines are separated by $linum"
 
 ;;;###autoload
 (defun helm-multi-swoop (&optional $query $buflist)
-  (interactive)
   "\
 Usage:
 M-x helm-multi-swoop
@@ -1146,6 +1145,7 @@ C-u M-x helm-multi-swoop
 If you have done helm-multi-swoop before, you can skip select buffers step.
 Last selected buffers will be applied to helm-multi-swoop.
 "
+  (interactive)
   (cond ($query
          (setq helm-multi-swoop-query $query))
         (mark-active
@@ -1173,8 +1173,8 @@ Last selected buffers will be applied to helm-multi-swoop.
 
 ;;;###autoload
 (defun helm-multi-swoop-all (&optional $query)
-  (interactive)
   "Apply all buffers to helm-multi-swoop"
+  (interactive)
   (cond ($query
          (setq helm-multi-swoop-query $query))
         (mark-active
@@ -1191,21 +1191,19 @@ Last selected buffers will be applied to helm-multi-swoop.
   (helm-multi-swoop--exec nil
                           :$query helm-multi-swoop-query
                           :$buflist (helm-multi-swoop--get-buffer-list)))
-                          
 
-(defun get-buffers-matching-mode (mode)
+(defun get-buffers-matching-mode ($mode)
   "Returns a list of buffers where their major-mode is equal to MODE"
-  (let ((buffer-mode-matches '()))
-   (dolist (buf (buffer-list))
-     (with-current-buffer buf
-       (if (eq mode major-mode)
-           (add-to-list 'buffer-mode-matches (buffer-name buf)))))
-   buffer-mode-matches))
+  (let ($buffer-mode-matches)
+    (mapc (lambda ($buffer)
+            (with-current-buffer $buffer
+              (if (eq $mode major-mode)
+                  (add-to-list '$buffer-mode-matches (buffer-name $buffer)))))
+          (buffer-list))
+    $buffer-mode-matches))
 
-;;;###autoload
-(defun helm-multi-swoop-by-mode (mode &optional $query)
+(defun helm-multi-swoop-by-mode ($mode &optional $query)
   "Apply all buffers whose mode is MODE to helm-multi-swoop"
-  (interactive)
   (cond ($query
          (setq helm-multi-swoop-query $query))
         (mark-active
@@ -1219,21 +1217,21 @@ Last selected buffers will be applied to helm-multi-swoop.
                (helm-swoop-pre-input-optimize
                 (funcall helm-swoop-pre-input-function))))
         (t (setq helm-multi-swoop-query "")))
-  (if (get-buffers-matching-mode mode)
-  (helm-multi-swoop--exec nil
-                          :$query helm-multi-swoop-query
-                          :$buflist (get-buffers-matching-mode mode))
-  (message "there are no buffers in that mode right now")))
+  (if (get-buffers-matching-mode $mode)
+      (helm-multi-swoop--exec nil
+                              :$query helm-multi-swoop-query
+                              :$buflist (get-buffers-matching-mode $mode))
+    (message "there are no buffers in that mode right now")))
 
 ;;;###autoload
 (defun helm-multi-swoop-org ()
-  "applies all org-mode buffers to helm-multi-swoop"
+  "Applies all org-mode buffers to helm-multi-swoop"
   (interactive)
   (helm-multi-swoop-by-mode 'org-mode))
 
 ;;;###autoload
 (defun helm-multi-swoop-current-mode ()
-  "applies all buffers of the same mode as the current buffer to helm-multi-swoop"
+  "Applies all buffers of the same mode as the current buffer to helm-multi-swoop"
   (interactive)
   (helm-multi-swoop-by-mode major-mode))
 
