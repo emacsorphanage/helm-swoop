@@ -691,6 +691,21 @@ If $linum is number, lines are separated by $linum"
 ;; When doing evil-search, hand the word over to helm-swoop
 ;; (define-key evil-motion-state-map (kbd "M-i") 'helm-swoop-from-evil-search)
 
+;; Receive word from evil search ---------------
+(defun helm-swoop-yank-thing-at-point ()
+  "Insert string at which the point helm-swoop started."
+  (interactive)
+  (let ($amend)
+    (with-selected-window helm-swoop-synchronizing-window
+      (with-current-buffer (get-buffer (cdr helm-swoop-last-point))
+        (save-excursion
+          (goto-char (car helm-swoop-last-point))
+          (setq $amend (thing-at-point 'symbol)))))
+    (when $amend
+      (with-selected-window (minibuffer-window)
+        (insert $amend)))))
+;; (define-key helm-swoop-map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
+
 ;; For helm-resume ------------------------
 (defadvice helm-resume-select-buffer
   (around helm-swoop-if-selected-as-resume activate)
