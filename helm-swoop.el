@@ -1191,6 +1191,60 @@ Last selected buffers will be applied to helm-multi-swoop.
   (helm-multi-swoop--exec nil
                           :$query helm-multi-swoop-query
                           :$buflist (helm-multi-swoop--get-buffer-list)))
+                          
+(defun get-buffers-matching-mode (mode)
+  "Returns a list of buffers where their major-mode is equal to MODE"
+  (let ((buffer-mode-matches '()))
+   (dolist (buf (buffer-list))
+     (with-current-buffer buf
+       (if (eq mode major-mode)
+           (add-to-list 'buffer-mode-matches (buffer-name buf)))))
+   buffer-mode-matches))
+
+(defun get-buffers-matching-mode (mode)
+  "Returns a list of buffers where their major-mode is equal to MODE"
+  (let ((buffer-mode-matches '()))
+   (dolist (buf (buffer-list))
+     (with-current-buffer buf
+       (if (eq mode major-mode)
+           (add-to-list 'buffer-mode-matches (buffer-name buf)))))
+   buffer-mode-matches))
+
+;;;###autoload
+(defun helm-multi-swoop-by-mode (mode &optional $query)
+  "Apply all buffers whose mode is MODE to helm-multi-swoop"
+  (interactive)
+  (cond ($query
+         (setq helm-multi-swoop-query $query))
+        (mark-active
+         (let (($st (buffer-substring-no-properties
+                     (region-beginning) (region-end))))
+           (if (string-match "\n" $st)
+               (message "Multi line region is not allowed")
+             (setq helm-multi-swoop-query
+                   (helm-swoop-pre-input-optimize $st)))))
+        ((setq helm-multi-swoop-query
+               (helm-swoop-pre-input-optimize
+                (funcall helm-swoop-pre-input-function))))
+        (t (setq helm-multi-swoop-query "")))
+  (if (get-buffers-matching-mode mode)
+  (helm-multi-swoop--exec nil
+                          :$query helm-multi-swoop-query
+                          :$buflist (get-buffers-matching-mode mode))
+  (message "there are no buffers in that mode right now")))
+
+;;;###autoload
+(defun helm-multi-swoop-org ()
+  "applies all org-mode buffers to helm-multi-swoop"
+  (interactive)
+  (helm-multi-swoop-by-mode 'org-mode))
+
+;;;###autoload
+(defun helm-multi-swoop-current-mode ()
+  "applies all buffers of the same mode as the current buffer to helm-multi-swoop"
+  (interactive)
+  (helm-multi-swoop-by-mode major-mode))
+
 
 ;; option -------------------------------------------------------
 
