@@ -1252,16 +1252,16 @@ Last selected buffers will be applied to helm-multi-swoop.
     (message "there are no buffers in that mode right now")))
 
 ;;;###autoload
-(defun helm-multi-swoop-org ()
+(defun helm-multi-swoop-org (&optional $query)
   "Applies all org-mode buffers to helm-multi-swoop"
   (interactive)
-  (helm-multi-swoop-by-mode 'org-mode))
+  (helm-multi-swoop-by-mode 'org-mode $query))
 
 ;;;###autoload
-(defun helm-multi-swoop-current-mode ()
+(defun helm-multi-swoop-current-mode (&optional $query)
   "Applies all buffers of the same mode as the current buffer to helm-multi-swoop"
   (interactive)
-  (helm-multi-swoop-by-mode major-mode))
+  (helm-multi-swoop-by-mode major-mode $query))
 
 
 ;; option -------------------------------------------------------
@@ -1286,6 +1286,17 @@ Last selected buffers will be applied to helm-multi-swoop.
   (let (($query helm-pattern))
     (run-with-timer 0 nil (lambda () (helm-multi-swoop-all $query))))
   (helm-exit-minibuffer))
+
+(defun helm-multi-swoop-current-mode-from-helm-swoop ()
+  "Invoke `helm-multi-swoop-all' from helm-swoop."
+  (interactive)
+  (helm-swoop--restore)
+  (delete-overlay helm-swoop-line-overlay)
+  (setq helm-multi-swoop-all-from-helm-swoop-last-point helm-swoop-last-point)
+  (let (($query helm-pattern))
+    (run-with-timer 0 nil (lambda () (helm-multi-swoop-current-mode $query))))
+  (helm-exit-minibuffer))
+;; (define-key helm-swoop-map (kbd "M-m") 'helm-multi-swoop-current-mode-from-helm-swoop)
 
 (defadvice helm-resume (around helm-multi-swoop-resume activate)
   "Resume if the last used helm buffer is *Helm Swoop*"

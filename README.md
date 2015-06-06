@@ -87,6 +87,9 @@ Skip the select phase and apply to all buffers with the same major mode as the c
 ;; When doing evil-search, hand the word over to helm-swoop
 ;; (define-key evil-motion-state-map (kbd "M-i") 'helm-swoop-from-evil-search)
 
+;; Instead of helm-multi-swoop-all, you can also use helm-multi-swoop-current-mode
+(define-key helm-swoop-map (kbd "M-m") 'helm-multi-swoop-current-mode-from-helm-swoop)
+
 ;; Move up and down like isearch
 (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
 (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
