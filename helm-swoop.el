@@ -170,6 +170,7 @@
     (set-keymap-parent $map helm-map)
     (define-key $map (kbd "C-c C-e") 'helm-swoop-edit)
     (define-key $map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
+    (define-key $map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
     (delq nil $map))
   "Keymap for helm-swoop")
 
@@ -704,7 +705,6 @@ If $linum is number, lines are separated by $linum"
     (when $amend
       (with-selected-window (minibuffer-window)
         (insert $amend)))))
-;; (define-key helm-swoop-map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
 
 ;; For helm-resume ------------------------
 (defadvice helm-resume-select-buffer
