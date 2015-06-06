@@ -535,11 +535,11 @@ If $linum is number, lines are separated by $linum"
   (if (boundp 'helm-swoop-list-cache) (setq helm-swoop-list-cache nil)))
 (add-hook 'after-save-hook 'helm-swoop--clear-cache)
 
-(defadvice narrow-to-region (around helm-swoop-advice-narrow-to-region disable)
+(defadvice narrow-to-region (around helm-swoop-advice-narrow-to-region activate)
   (helm-swoop--clear-cache)
   ad-do-it)
 
-(defadvice widen (around helm-swoop-advice-widen disable)
+(defadvice widen (around helm-swoop-advice-widen activate)
   (helm-swoop--clear-cache)
   ad-do-it)
 
@@ -594,12 +594,8 @@ If $linum is number, lines are separated by $linum"
                        'helm-swoop-target-line-face))
   ;; Cache
   (cond ((not (boundp 'helm-swoop-cache))
-         (set (make-local-variable 'helm-swoop-cache) nil)
          ;; first time of a buffer
-         (ad-enable-advice 'narrow-to-region 'around 'helm-swoop-advice-narrow-to-region)
-         (ad-activate 'narrow-to-region)
-         (ad-enable-advice 'widen 'around 'helm-swoop-advice-widen)
-         (ad-activate 'widen))
+         (set (make-local-variable 'helm-swoop-cache) nil))
         ((buffer-modified-p)
          (setq helm-swoop-cache nil)))
   ;; Cache for multiline
