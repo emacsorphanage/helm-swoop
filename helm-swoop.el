@@ -988,11 +988,11 @@ If $linum is number, lines are separated by $linum"
         (with-current-buffer $buf
           (when (not (eq $buf helm-multi-swoop-move-line-action-last-buffer))
             (set-window-buffer nil $buf)
-            (helm-swoop--pattern-match))
+            (helm-swoop--pattern-match)
+            (helm-swoop--recenter))
           (helm-swoop--goto-line $num)
           (helm-multi-swoop--overlay-move $buf))
-        (setq helm-multi-swoop-move-line-action-last-buffer $buf)
-        (helm-swoop--recenter))
+        (setq helm-multi-swoop-move-line-action-last-buffer $buf))
       (setq helm-swoop-last-line-info (cons $buf $num)))))
 
 (defun helm-multi-swoop--get-marked-buffers ()
