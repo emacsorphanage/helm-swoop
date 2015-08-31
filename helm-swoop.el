@@ -471,18 +471,19 @@ If $linum is number, lines are separated by $linum"
                    'buffer-substring-no-properties))
     (keymap . ,helm-swoop-map)
     (header-line . "[C-c C-e] Edit mode, [M-i] apply all buffers")
-    (action . (lambda ($line)
-                (helm-swoop--goto-line
-                 (when (string-match "^[0-9]+" $line)
-                   (string-to-number (match-string 0 $line))))
-                (let (($regex (mapconcat 'identity
-                                         (split-string helm-pattern " ")
-                                         "\\|")))
-                  (when (or (and (and (featurep 'migemo) (featurep 'helm-migemo))
-                                 (migemo-forward $regex nil t))
-                            (re-search-forward $regex nil t))
-                    (goto-char (match-beginning 0))))
-                (helm-swoop--recenter)))
+    (action . (("Go to Line"
+                . (lambda ($line)
+                    (helm-swoop--goto-line
+                     (when (string-match "^[0-9]+" $line)
+                       (string-to-number (match-string 0 $line))))
+                    (let (($regex (mapconcat 'identity
+                                             (split-string helm-pattern " ")
+                                             "\\|")))
+                      (when (or (and (and (featurep 'migemo) (featurep 'helm-migemo))
+                                     (migemo-forward $regex nil t))
+                                (re-search-forward $regex nil t))
+                        (goto-char (match-beginning 0))))
+                    (helm-swoop--recenter)))))
     (migemo) ;;? in exchange for those matches ^ $ [0-9] .*
     ))
 
@@ -507,16 +508,17 @@ If $linum is number, lines are separated by $linum"
                             (helm-swoop--get-content t))
                       "\n" $linum)))
     (keymap . ,helm-swoop-map)
-    (action . (lambda ($line)
-                (helm-swoop--goto-line
-                 (when (string-match "^[0-9]+" $line)
-                   (string-to-number (match-string 0 $line))))
-                (when (re-search-forward
-                       (mapconcat 'identity
-                                  (split-string helm-pattern " ") "\\|")
-                       nil t)
-                  (goto-char (match-beginning 0)))
-                (helm-swoop--recenter)))
+    (action . (("Go to Line"
+                . (lambda ($line)
+                    (helm-swoop--goto-line
+                     (when (string-match "^[0-9]+" $line)
+                       (string-to-number (match-string 0 $line))))
+                    (when (re-search-forward
+                           (mapconcat 'identity
+                                      (split-string helm-pattern " ") "\\|")
+                           nil t)
+                      (goto-char (match-beginning 0)))
+                    (helm-swoop--recenter)))))
     (multiline)
     (migemo)))
 
@@ -1036,19 +1038,20 @@ If $linum is number, lines are separated by $linum"
                           (lambda () (split-string (helm-swoop--get-content) "\n"))))
                      ($action
                       (or $action
-                          (lambda ($line)
-                            (switch-to-buffer $buf)
-                            (helm-swoop--goto-line
-                             (when (string-match "^[0-9]+" $line)
-                               (string-to-number
-                                (match-string 0 $line))))
-                            (when (re-search-forward
-                                   (mapconcat 'identity
-                                              (split-string
-                                               helm-pattern " ") "\\|")
-                                   nil t)
-                              (goto-char (match-beginning 0)))
-                            (helm-swoop--recenter)))))
+                          '(("Go to Line"
+                             . (lambda ($line)
+                                 (switch-to-buffer $buf)
+                                 (helm-swoop--goto-line
+                                  (when (string-match "^[0-9]+" $line)
+                                    (string-to-number
+                                     (match-string 0 $line))))
+                                 (when (re-search-forward
+                                        (mapconcat 'identity
+                                                   (split-string
+                                                    helm-pattern " ") "\\|")
+                                        nil t)
+                                   (goto-char (match-beginning 0)))
+                                 (helm-swoop--recenter)))))))
                 (setq $preserve-position
                       (cons (cons $buf (point)) $preserve-position))
                 (setq
@@ -1521,16 +1524,18 @@ Last selected buffers will be applied to helm-multi-swoop.
               `((name . "helm-swoop-same-face-at-point")
                 (candidates . ,(helm-swoop--cull-face-include-line $face))
                 (header-line . ,(format "%s" $face))
-                (action . (lambda ($line)
-                            (helm-swoop--goto-line
-                             (when (string-match "^[0-9]+" $line)
-                               (string-to-number (match-string 0 $line))))
-                            (let (($po (point))
-                                  ($poe (point-at-eol)))
-                              (while (<= (setq $po (next-single-property-change $po 'face)) $poe)
-                                (when (eq 'helm-swoop-target-word-face (helm-swoop--get-at-face $po))
-                                  (goto-char $po))))
-                            (helm-swoop--recenter))))))
+                (action
+                 . (("Go to Line"
+                     . (lambda ($line)
+                         (helm-swoop--goto-line
+                          (when (string-match "^[0-9]+" $line)
+                            (string-to-number (match-string 0 $line))))
+                         (let (($po (point))
+                               ($poe (point-at-eol)))
+                           (while (<= (setq $po (next-single-property-change $po 'face)) $poe)
+                             (when (eq 'helm-swoop-target-word-face (helm-swoop--get-at-face $po))
+                               (goto-char $po))))
+                         (helm-swoop--recenter))))))))
 
 (defun helm-multi-swoop-same-face-at-point (&optional $face)
   (interactive)
