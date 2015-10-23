@@ -133,6 +133,9 @@
  :type '(choice (const :tag "vertically"   split-window-vertically)
                 (const :tag "horizontally" split-window-horizontally))
  :group 'helm-swoop)
+(defcustom helm-swoop-use-fuzzy-match nil
+  "If t, use fuzzy matching functions as well as exact matches."
+  :group 'helm-swoop :type 'boolean)
 
 (defvar helm-swoop-split-window-function
   (lambda ($buf)
@@ -183,17 +186,19 @@
     (delq nil $map)))
 
 (defvar helm-c-source-swoop-match-functions
-  '(helm-mm-exact-match
-    helm-mm-match
-    helm-fuzzy-match
-    helm-mm-3-migemo-match))
+  (append
+   '(helm-mm-exact-match
+     helm-mm-match
+     helm-mm-3-migemo-match)
+   (when helm-swoop-use-fuzzy-match '(helm-fuzzy-match))))
 
 (defvar helm-c-source-swoop-search-functions
-  '(helm-mm-exact-search
-    helm-mm-search
-    helm-candidates-in-buffer-search-default-fn
-    helm-fuzzy-search
-    helm-mm-3-migemo-search))
+  (append
+   '(helm-mm-exact-search
+     helm-mm-search
+     helm-candidates-in-buffer-search-default-fn
+     helm-mm-3-migemo-search)
+   (when helm-swoop-use-fuzzy-match '(helm-fuzzy-search))))
 
 (defcustom helm-swoop-pre-input-function
   (lambda () (thing-at-point 'symbol))
