@@ -186,19 +186,25 @@
     (delq nil $map)))
 
 (defvar helm-c-source-swoop-match-functions
-  (append
-   '(helm-mm-exact-match
-     helm-mm-match
-     helm-mm-3-migemo-match)
-   (when helm-swoop-use-fuzzy-match '(helm-fuzzy-match))))
+  '(helm-mm-exact-match
+    helm-mm-match
+    helm-mm-3-migemo-match))
 
 (defvar helm-c-source-swoop-search-functions
-  (append
    '(helm-mm-exact-search
      helm-mm-search
      helm-candidates-in-buffer-search-default-fn
-     helm-mm-3-migemo-search)
-   (when helm-swoop-use-fuzzy-match '(helm-fuzzy-search))))
+     helm-mm-3-migemo-search))
+
+(defun helm-swoop-match-functions ()
+  (if helm-swoop-use-fuzzy-match
+      (append helm-c-source-swoop-match-functions '(helm-fuzzy-match))
+    helm-c-source-swoop-match-functions))
+
+(defun helm-swoop-search-functions ()
+  (if helm-swoop-use-fuzzy-match
+      (append helm-c-source-swoop-search-functions '(helm-fuzzy-search))
+    helm-c-source-swoop-search-functions))
 
 (defcustom helm-swoop-pre-input-function
   (lambda () (thing-at-point 'symbol))
@@ -504,8 +510,8 @@ If $linum is number, lines are separated by $linum"
                                 (re-search-forward $regex nil t))
                         (goto-char (match-beginning 0))))
                     (helm-swoop--recenter)))))
-    (match . ,helm-c-source-swoop-match-functions)
-    (search . ,helm-c-source-swoop-search-functions)))
+    (match . ,(helm-swoop-match-functions))
+    (search . ,(helm-swoop-search-functions))))
 
 (defun helm-c-source-multi-swoop ($buf $func $action)
   `((name . ,$buf)
@@ -516,8 +522,8 @@ If $linum is number, lines are separated by $linum"
     (header-line . ,(concat $buf "    [C-c C-e] Edit mode"))
     (keymap . ,helm-multi-swoop-map)
     (requires-pattern . 2)
-    (match . ,helm-c-source-swoop-match-functions)
-    (search . ,helm-c-source-swoop-search-functions)))
+    (match . ,(helm-swoop-match-functions))
+    (search . ,(helm-swoop-search-functions))))
 
 (defun helm-c-source-swoop-multiline ($linum)
   `((name . ,(buffer-name (current-buffer)))
@@ -542,8 +548,8 @@ If $linum is number, lines are separated by $linum"
                       (goto-char (match-beginning 0)))
                     (helm-swoop--recenter)))))
     (multiline)
-    (match . ,helm-c-source-swoop-match-functions)
-    (search . ,helm-c-source-swoop-search-functions)))
+    (match . ,(helm-swoop-match-functions))
+    (search . ,(helm-swoop-search-functions))))
 
 (defun helm-swoop--set-prefix (&optional $multiline)
   ;; Enable scrolling margin
@@ -1179,8 +1185,8 @@ If $linum is number, lines are separated by $linum"
     (candidates . helm-multi-swoop--get-buffer-list)
     (header-line . "[C-SPC]/[M-SPC] select, [RET] next step")
     (keymap . ,helm-multi-swoop-buffers-map)
-    (match . ,helm-c-source-swoop-match-functions)
-    (search . ,helm-c-source-swoop-search-functions)))
+    (match . ,(helm-swoop-match-functions))
+    (search . ,(helm-swoop-search-functions))))
 
 ;;;###autoload
 (defun helm-multi-swoop (&optional $query $buflist)

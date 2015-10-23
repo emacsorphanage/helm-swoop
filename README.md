@@ -115,21 +115,10 @@ Skip the select phase and apply to all buffers with the same major mode as the c
 ;; Face name is `helm-swoop-line-number-face`
 (setq helm-swoop-use-line-number-face t)
 
-;; Match/Search methods (Fuzzy matching, Migemo)
-;; If you do not preferr fuzzy, remove it from the list below
-(defvar helm-c-source-swoop-match-functions
-  '(helm-mm-exact-match
-    helm-mm-match
-    helm-fuzzy-match
-    helm-mm-3-migemo-match))
-(setq helm-c-source-swoop-search-functions
-      '(helm-mm-exact-search
-        helm-mm-search
-        helm-candidates-in-buffer-search-default-fn
-        helm-fuzzy-search
-        helm-mm-3-migemo-search))
+;; If you prefer fuzzy matching
+(setq helm-swoop-use-fuzzy-match t)
 
-;; In addition of above, you need to enable migemo mode if you'd like to
+;; If you would like to use migemo, enable helm's migemo feature
 (helm-migemo-mode 1)
 ```
 
