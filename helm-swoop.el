@@ -516,17 +516,14 @@ If $linum is number, lines are separated by $linum"
 
 (defun helm-c-source-swoop-multiline ($linum)
   `((name . ,(buffer-name (current-buffer)))
-    (init . (lambda ()
-              (with-current-buffer (helm-candidate-buffer 'local)
-                (insert ,(if helm-swoop-list-cache
-                             (progn
-                               (string-join (helm-swoop--split-lines-by
-                                             helm-swoop-list-cache "\n" $linum)))
-                           (string-join (helm-swoop--split-lines-by
-                                         (setq helm-swoop-list-cache
-                                               (helm-swoop--get-content t))
-                                         "\n" $linum)))))))
-    (candidates-in-buffer)
+    (candidates . ,(if helm-swoop-list-cache
+                       (progn
+                         (helm-swoop--split-lines-by
+                          helm-swoop-list-cache "\n" $linum))
+                     (helm-swoop--split-lines-by
+                      (setq helm-swoop-list-cache
+                            (helm-swoop--get-content t))
+                      "\n" $linum)))
     (keymap . ,helm-swoop-map)
     (action . (("Go to Line"
                 . (lambda ($line)
