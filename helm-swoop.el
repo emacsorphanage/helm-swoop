@@ -702,7 +702,8 @@ If $linum is number, lines are separated by $linum"
   (let (($query (if isearch-regexp
                     isearch-string
                   (regexp-quote isearch-string))))
-    (isearch-exit)
+    (let (search-nonincremental-instead)
+      (isearch-exit))
     (helm-swoop :$query $query)))
 ;; When doing isearch, hand the word over to helm-swoop
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
@@ -1010,18 +1011,20 @@ If $linum is number, lines are separated by $linum"
            ($num (when (string-match "^[0-9]+" $key)
                    (string-to-number (match-string 0 $key))))
            ($source (helm-get-current-source))
-           ($buf (get-buffer (assoc-default 'name $source))))
-      ;; Synchronizing line position
-      (with-selected-window helm-swoop-synchronizing-window
-        (with-current-buffer $buf
-          (when (not (eq $buf helm-multi-swoop-move-line-action-last-buffer))
-            (set-window-buffer nil $buf)
-            (helm-swoop--pattern-match))
-          (helm-swoop--goto-line $num)
-          (helm-multi-swoop--overlay-move $buf)
-          (helm-swoop--recenter))
-        (setq helm-multi-swoop-move-line-action-last-buffer $buf))
-      (setq helm-swoop-last-line-info (cons $buf $num)))))
+           ($buf (let ((name (assoc-default 'name $source)))
+                   (when name (get-buffer name)))))
+      (when $buf
+        ;; Synchronizing line position
+        (with-selected-window helm-swoop-synchronizing-window
+          (with-current-buffer $buf
+            (when (not (eq $buf helm-multi-swoop-move-line-action-last-buffer))
+              (set-window-buffer nil $buf)
+              (helm-swoop--pattern-match))
+            (helm-swoop--goto-line $num)
+            (helm-multi-swoop--overlay-move $buf)
+            (helm-swoop--recenter))
+          (setq helm-multi-swoop-move-line-action-last-buffer $buf))
+        (setq helm-swoop-last-line-info (cons $buf $num))))))
 
 (defun helm-multi-swoop--get-marked-buffers ()
   (let ($list)
@@ -1299,7 +1302,8 @@ Last selected buffers will be applied to helm-multi-swoop.
   (let (($query (if isearch-regexp
                     isearch-string
                   (regexp-quote isearch-string))))
-    (isearch-exit)
+    (let (search-nonincremental-instead)
+      (isearch-exit))
     (helm-multi-swoop-all $query)))
 ;; When doing isearch, hand the word over to helm-swoop
 ;; (define-key isearch-mode-map (kbd "C-x M-i") 'helm-multi-swoop-all-from-isearch)
