@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 1.7.0
+;; Version: 1.7.1
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
@@ -1011,8 +1011,8 @@ If $linum is number, lines are separated by $linum"
            ($num (when (string-match "^[0-9]+" $key)
                    (string-to-number (match-string 0 $key))))
            ($source (helm-get-current-source))
-           ($buf (let ((name (assoc-default 'name $source)))
-                   (when name (get-buffer name)))))
+           ($buf (let (($name (assoc-default 'name $source)))
+                   (when $name (get-buffer $name)))))
       (when $buf
         ;; Synchronizing line position
         (with-selected-window helm-swoop-synchronizing-window
