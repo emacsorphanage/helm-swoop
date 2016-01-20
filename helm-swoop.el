@@ -699,7 +699,8 @@ If $linum is number, lines are separated by $linum"
   (let (($query (if isearch-regexp
                     isearch-string
                   (regexp-quote isearch-string))))
-    (isearch-exit)
+    (let (search-nonincremental-instead)
+      (isearch-exit))
     (helm-swoop :$query $query)))
 ;; When doing isearch, hand the word over to helm-swoop
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
@@ -1296,7 +1297,8 @@ Last selected buffers will be applied to helm-multi-swoop.
   (let (($query (if isearch-regexp
                     isearch-string
                   (regexp-quote isearch-string))))
-    (isearch-exit)
+    (let (search-nonincremental-instead)
+      (isearch-exit))
     (helm-multi-swoop-all $query)))
 ;; When doing isearch, hand the word over to helm-swoop
 ;; (define-key isearch-mode-map (kbd "C-x M-i") 'helm-multi-swoop-all-from-isearch)
