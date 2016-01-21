@@ -155,7 +155,6 @@
 (defvar helm-swoop-last-line-info nil)
 
 ;; Buffer local variables
-(defvar helm-swoop-cache)
 (defvar helm-swoop-list-cache)
 (defvar helm-swoop-pattern)            ; Keep helm-pattern value
 (defvar helm-swoop-last-query)         ; Last search query for resume
@@ -282,7 +281,7 @@
     (setq $list (cons (substring $string $from2) $list))
     (nreverse $list)))
 
-(defun helm-swoop--target-line-overlay-move ()
+(defun helm-swoop--target-line-overlay-move (&optional $buf)
   "Add color to the target line"
   (move-overlay
    helm-swoop-line-overlay
@@ -295,7 +294,8 @@
      (goto-char (point-at-bol))
      (or (re-search-forward "\n" nil t helm-swoop-last-prefix-number)
          ;; For the end of buffer error
-         (point-max))))
+         (point-max)))
+   $buf)
   (helm-swoop--unveil-invisible-overlay))
 
 (defun helm-swoop--validate-regexp (regexp)
@@ -461,37 +461,42 @@ This function needs to call after latest helm-swoop-line-overlay set."
 
 ;; core ------------------------------------------------
 
-(defun helm-swoop--get-content (&optional $linum)
+(defun helm-swoop--get-content ($buffer &optional $linum)
   "Get the whole content in buffer and add line number at the head.
 If $linum is number, lines are separated by $linum"
-  (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max)))
-        $return)
-    (with-temp-buffer
-      (insert $bufstr)
-      (goto-char (point-min))
-      (let (($i 1))
-        (insert (format "%s " $i))
-        (while (re-search-forward "\n" nil t)
-          (cl-incf $i)
-          (if helm-swoop-use-line-number-face
-              (insert (propertize (format "%s" $i) 'font-lock-face 'helm-swoop-line-number-face) " ")
-            (insert (format "%s " $i))))
-        ;; Delete empty lines
-        (unless $linum
-          (goto-char (point-min))
-          (while (re-search-forward "^[0-9]+\\s-*$" nil t)
-            (replace-match ""))))
-      (setq $return (helm-swoop--buffer-substring (point-min) (point-max))))
-    $return))
+  (let (($buf (get-buffer $buffer)))
+    (when $buf
+      (with-current-buffer $buf
+        (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max)))
+              $return)
+          (with-temp-buffer
+            (insert $bufstr)
+            (goto-char (point-min))
+            (let (($i 1))
+              (insert (format "%s " $i))
+              (while (re-search-forward "\n" nil t)
+                (cl-incf $i)
+                (if helm-swoop-use-line-number-face
+                    (insert (propertize (format "%s" $i) 'font-lock-face 'helm-swoop-line-number-face) " ")
+                  (insert (format "%s " $i))))
+              ;; Delete empty lines
+              (unless $linum
+                (goto-char (point-min))
+                (while (re-search-forward "^[0-9]+\\s-*$" nil t)
+                  (replace-match ""))))
+            (setq $return (helm-swoop--buffer-substring (point-min) (point-max))))
+          $return)))))
 
 (defun helm-c-source-swoop ()
-  `((name . ,(buffer-name (current-buffer)))
-    (init . (lambda ()
-              (unless helm-swoop-cache
-                (with-current-buffer (helm-candidate-buffer 'local)
-                  (insert ,(helm-swoop--get-content)))
-                (setq helm-swoop-cache t))))
-    (candidates-in-buffer)
+  `((name . ,(buffer-name helm-swoop-target-buffer))
+    (candidates . ,(if helm-swoop-list-cache
+                       (progn
+                         (helm-swoop--split-lines-by
+                          helm-swoop-list-cache "\n" helm-swoop-last-prefix-number))
+                     (helm-swoop--split-lines-by
+                      (setq helm-swoop-list-cache
+                            (helm-swoop--get-content helm-swoop-target-buffer t))
+                      "\n" helm-swoop-last-prefix-number)))
     (get-line . ,(if helm-swoop-speed-or-color
                      'helm-swoop--buffer-substring
                    'buffer-substring-no-properties))
@@ -502,52 +507,31 @@ If $linum is number, lines are separated by $linum"
                     (helm-swoop--goto-line
                      (when (string-match "^[0-9]+" $line)
                        (string-to-number (match-string 0 $line))))
-                    (let (($regex (mapconcat 'identity
-                                             (split-string helm-pattern " ")
-                                             "\\|")))
+                    (let (($regex
+                           (mapconcat 'identity
+                                      (split-string helm-pattern " ")
+                                      "\\|")))
                       (when (or (and (and (featurep 'migemo) helm-migemo-mode)
                                      (migemo-forward $regex nil t))
                                 (re-search-forward $regex nil t))
                         (goto-char (match-beginning 0))))
                     (helm-swoop--recenter)))))
+    ,(if (and helm-swoop-last-prefix-number
+              (> helm-swoop-last-prefix-number 1))
+         '(multiline))
     (match . ,(helm-swoop-match-functions))
     (search . ,(helm-swoop-search-functions))))
 
-(defun helm-c-source-multi-swoop ($buf $func $action)
+(defun helm-c-source-multi-swoop ($buf $func $action $multiline)
   `((name . ,$buf)
-    ;;(init . ,(funcall $func))
-    ;;(candidates-in-buffer)
     (candidates . ,(funcall $func))
     (action . ,$action)
     (header-line . ,(concat $buf "    [C-c C-e] Edit mode"))
     (keymap . ,helm-multi-swoop-map)
     (requires-pattern . 2)
-    (match . ,(helm-swoop-match-functions))
-    (search . ,(helm-swoop-search-functions))))
-
-(defun helm-c-source-swoop-multiline ($linum)
-  `((name . ,(buffer-name (current-buffer)))
-    (candidates . ,(if helm-swoop-list-cache
-                       (progn
-                         (helm-swoop--split-lines-by
-                          helm-swoop-list-cache "\n" $linum))
-                     (helm-swoop--split-lines-by
-                      (setq helm-swoop-list-cache
-                            (helm-swoop--get-content t))
-                      "\n" $linum)))
-    (keymap . ,helm-swoop-map)
-    (action . (("Go to Line"
-                . (lambda ($line)
-                    (helm-swoop--goto-line
-                     (when (string-match "^[0-9]+" $line)
-                       (string-to-number (match-string 0 $line))))
-                    (when (re-search-forward
-                           (mapconcat 'identity
-                                      (split-string helm-pattern " ") "\\|")
-                           nil t)
-                      (goto-char (match-beginning 0)))
-                    (helm-swoop--recenter)))))
-    (multiline)
+    ,(if (and $multiline
+              (> $multiline 1))
+         '(multiline))
     (match . ,(helm-swoop-match-functions))
     (search . ,(helm-swoop-search-functions))))
 
@@ -562,7 +546,6 @@ If $linum is number, lines are separated by $linum"
 
 ;; Delete cache when modified file is saved
 (defun helm-swoop--clear-cache ()
-  (if (boundp 'helm-swoop-cache) (setq helm-swoop-cache nil))
   (if (boundp 'helm-swoop-list-cache) (setq helm-swoop-list-cache nil)))
 (add-hook 'after-save-hook 'helm-swoop--clear-cache)
 
@@ -624,12 +607,6 @@ If $linum is number, lines are separated by $linum"
                          'helm-swoop-target-line-block-face
                        'helm-swoop-target-line-face))
   ;; Cache
-  (cond ((not (boundp 'helm-swoop-cache))
-         ;; first time of a buffer
-         (set (make-local-variable 'helm-swoop-cache) nil))
-        ((buffer-modified-p)
-         (setq helm-swoop-cache nil)))
-  ;; Cache for multiline
   (cond ((not (boundp 'helm-swoop-list-cache))
          (set (make-local-variable 'helm-swoop-list-cache) nil))
         ((buffer-modified-p)
@@ -675,9 +652,7 @@ If $linum is number, lines are separated by $linum"
               (helm-completion-window-scroll-margin 5))
           (helm :sources
                 (or $source
-                    (if (> helm-swoop-last-prefix-number 1)
-                        (helm-c-source-swoop-multiline helm-swoop-last-prefix-number)
-                      (helm-c-source-swoop)))
+                    (helm-c-source-swoop))
                 :buffer helm-swoop-buffer
                 :input $query
                 :prompt helm-swoop-prompt
@@ -724,12 +699,15 @@ If $linum is number, lines are separated by $linum"
 (defun helm-swoop-yank-thing-at-point ()
   "Insert string at which the point helm-swoop started."
   (interactive)
-  (let ($amend)
-    (with-selected-window helm-swoop-synchronizing-window
-      (with-current-buffer (get-buffer (cdr helm-swoop-last-point))
-        (save-excursion
-          (goto-char (car helm-swoop-last-point))
-          (setq $amend (thing-at-point 'symbol)))))
+  (let ($amend
+        ($buf (get-buffer helm-swoop-synchronizing-window)))
+    (with-selected-window $buf
+      (setq $buf (get-buffer (cdr helm-swoop-last-point)))
+      (when $buf
+        (with-current-buffer $buf
+          (save-excursion
+            (goto-char (car helm-swoop-last-point))
+            (setq $amend (thing-at-point 'symbol))))))
     (when $amend
       (with-selected-window (minibuffer-window)
         (insert $amend)))))
@@ -995,16 +973,6 @@ If $linum is number, lines are separated by $linum"
     (when (helm-pos-multiline-p)
       (helm-move--previous-multi-line-fn))))
 
-(defun helm-multi-swoop--overlay-move (&optional $buf)
-  (move-overlay
-   helm-swoop-line-overlay
-   (goto-char (point-at-bol))
-   (save-excursion
-     (goto-char (point-at-bol))
-     (or (re-search-forward "\n" nil t) (point-max)))
-   $buf)
-  (helm-swoop--unveil-invisible-overlay))
-
 (defun helm-multi-swoop--move-line-action ()
   (with-helm-window
     (let* (($key (buffer-substring (point-at-bol) (point-at-eol)))
@@ -1021,28 +989,30 @@ If $linum is number, lines are separated by $linum"
               (set-window-buffer nil $buf)
               (helm-swoop--pattern-match))
             (helm-swoop--goto-line $num)
-            (helm-multi-swoop--overlay-move $buf)
+            (helm-swoop--target-line-overlay-move $buf)
             (helm-swoop--recenter))
           (setq helm-multi-swoop-move-line-action-last-buffer $buf))
         (setq helm-swoop-last-line-info (cons $buf $num))))))
 
 (defun helm-multi-swoop--get-marked-buffers ()
-  (let ($list)
-    (with-current-buffer helm-multi-swoop-buffer-list
-      (mapc (lambda ($ov)
-              (when (eq 'helm-visible-mark (overlay-get $ov 'face))
-                (setq $list (cons
-                             (let (($word (buffer-substring-no-properties
-                                           (overlay-start $ov) (overlay-end $ov))))
-                               (mapc (lambda ($r)
-                                       (setq $word (replace-regexp-in-string
-                                                    (car $r) (cdr $r) $word)))
-                                     (list '("\\`[ \t\n\r]+" . "")
-                                           '("[ \t\n\r]+\\'" . "")))
-                               $word)
-                             $list))))
-            (overlays-in (point-min) (point-max))))
-    (delete "" $list)))
+  (let ($list
+        ($buf (get-buffer helm-multi-swoop-buffer-list)))
+    (when $buf
+      (with-current-buffer (get-buffer helm-multi-swoop-buffer-list)
+        (mapc (lambda ($ov)
+                (when (eq 'helm-visible-mark (overlay-get $ov 'face))
+                  (setq $list (cons
+                               (let (($word (buffer-substring-no-properties
+                                             (overlay-start $ov) (overlay-end $ov))))
+                                 (mapc (lambda ($r)
+                                         (setq $word (replace-regexp-in-string
+                                                      (car $r) (cdr $r) $word)))
+                                       (list '("\\`[ \t\n\r]+" . "")
+                                             '("[ \t\n\r]+\\'" . "")))
+                                 $word)
+                               $list))))
+              (overlays-in (point-min) (point-max))))
+      (delete "" $list))))
 
 ;; core --------------------------------------------------------
 
@@ -1054,40 +1024,52 @@ If $linum is number, lines are separated by $linum"
             (cons (point) (buffer-name (current-buffer)))))
   (setq helm-swoop-last-line-info
         (cons (current-buffer) (line-number-at-pos)))
-  (let (($buffs (or $buflist (helm-multi-swoop--get-marked-buffers)
+  (unless (get-buffer helm-multi-swoop-buffer-list)
+    (get-buffer-create helm-multi-swoop-buffer-list))
+  (helm-swoop--set-prefix (prefix-numeric-value current-prefix-arg))
+  (let (($buffs (or $buflist
+                    (helm-multi-swoop--get-marked-buffers)
+                    `(,(buffer-name helm-swoop-target-buffer))
                     (error "No buffer selected")))
         $contents
-        $preserve-position)
+        $preserve-position
+        ($prefix-arg (prefix-numeric-value
+                      (or current-prefix-arg helm-swoop-last-prefix-number 1))))
+    (helm-swoop--set-prefix $prefix-arg)
     (setq helm-multi-swoop-last-selected-buffers $buffs)
     ;; Create buffer sources
     (mapc (lambda ($buf)
-            (with-current-buffer $buf
-              (let* (($func
-                      (or $func
-                          (lambda () (split-string (helm-swoop--get-content) "\n"))))
-                     ($action
-                      (or $action
-                          `(("Go to Line"
-                             . (lambda ($line)
-                                 (switch-to-buffer ,$buf)
-                                 (helm-swoop--goto-line
-                                  (when (string-match "^[0-9]+" $line)
-                                    (string-to-number
-                                     (match-string 0 $line))))
-                                 (when (re-search-forward
-                                        (mapconcat 'identity
-                                                   (split-string
-                                                    helm-pattern " ") "\\|")
-                                        nil t)
-                                   (goto-char (match-beginning 0)))
-                                 (helm-swoop--recenter)))))))
-                (setq $preserve-position
-                      (cons (cons $buf (point)) $preserve-position))
-                (setq
-                 $contents
-                 (cons
-                  (helm-c-source-multi-swoop $buf $func $action)
-                  $contents)))))
+            (when (get-buffer $buf)
+              (with-current-buffer (get-buffer $buf)
+                (let* (($func
+                        (or $func
+                            (lambda ()
+                              (helm-swoop--split-lines-by
+                               (helm-swoop--get-content $buf t)
+                               "\n" $prefix-arg))))
+                       ($action
+                        (or $action
+                            `(("Go to Line"
+                               . (lambda ($line)
+                                   (switch-to-buffer ,$buf)
+                                   (helm-swoop--goto-line
+                                    (when (string-match "^[0-9]+" $line)
+                                      (string-to-number
+                                       (match-string 0 $line))))
+                                   (when (re-search-forward
+                                          (mapconcat 'identity
+                                                     (split-string
+                                                      helm-pattern " ") "\\|")
+                                          nil t)
+                                     (goto-char (match-beginning 0)))
+                                   (helm-swoop--recenter)))))))
+                  (setq $preserve-position
+                        (cons (cons $buf (point)) $preserve-position))
+                  (setq
+                   $contents
+                   (cons
+                    (helm-c-source-multi-swoop $buf $func $action $prefix-arg)
+                    $contents))))))
           $buffs)
     (unwind-protect
         (progn
@@ -1112,7 +1094,7 @@ If $linum is number, lines are separated by $linum"
                 (make-overlay (point) (point)))
           (overlay-put helm-swoop-line-overlay
                        'face 'helm-swoop-target-line-face)
-          (helm-multi-swoop--overlay-move)
+          (helm-swoop--target-line-overlay-move)
           ;; Execute helm
           (let ((helm-display-function helm-swoop-split-window-function)
                 (helm-display-source-at-screen-top nil)
@@ -1253,10 +1235,11 @@ Last selected buffers will be applied to helm-multi-swoop.
 (defun get-buffers-matching-mode ($mode)
   "Returns a list of buffers where their major-mode is equal to MODE"
   (let ($buffer-mode-matches)
-    (mapc (lambda ($buffer)
-            (with-current-buffer $buffer
-              (if (eq $mode major-mode)
-                  (add-to-list '$buffer-mode-matches (buffer-name $buffer)))))
+    (mapc (lambda ($buf)
+            (when (get-buffer $buf)
+              (with-current-buffer (get-buffer $buf)
+                (if (eq $mode major-mode)
+                    (add-to-list '$buffer-mode-matches (buffer-name $buf))))))
           (buffer-list))
     $buffer-mode-matches))
 
@@ -1359,39 +1342,42 @@ Last selected buffers will be applied to helm-multi-swoop.
   (helm-swoop--delete-overlay 'target-buffer)
   (with-current-buffer (get-buffer-create helm-multi-swoop-edit-buffer)
     (helm-swoop--clear-edit-buffer 'helm-multi-swoop-edit)
-    (let (($bufstr "") ($mark nil))
+    (let (($bufstr "")
+          ($mark nil)
+          ($buf (get-buffer helm-multi-swoop-buffer)))
       ;; Get target line number to edit
-      (with-current-buffer helm-multi-swoop-buffer
-        ;; Set overlay to helm-source-header for editing marked lines
-        (save-excursion
-          (goto-char (point-min))
-          (let (($beg (point)) $end)
-            (overlay-recenter (point-max))
-            (while (setq $beg (text-property-any $beg (point-max)
-                                              'face 'helm-source-header))
-              (setq $end (next-single-property-change $beg 'face))
-              (overlay-put (make-overlay $beg $end) 'source-header t)
-              (setq $beg $end)
-              (goto-char $end))))
-        ;; Use selected line by [C-SPC] or [M-SPC]
-        (mapc (lambda ($ov)
-                (when (overlay-get $ov 'source-header)
-                  (setq $bufstr (concat (buffer-substring
-                                         (overlay-start $ov) (overlay-end $ov))
-                                        $bufstr)))
-                (when (eq 'helm-visible-mark (overlay-get $ov 'face))
-                  (let (($str (buffer-substring (overlay-start $ov) (overlay-end $ov))))
-                    (unless (equal "" $str) (setq $mark t))
+      (when $buf
+        (with-current-buffer $buf
+          ;; Set overlay to helm-source-header for editing marked lines
+          (save-excursion
+            (goto-char (point-min))
+            (let (($beg (point)) $end)
+              (overlay-recenter (point-max))
+              (while (setq $beg (text-property-any $beg (point-max)
+                                                   'face 'helm-source-header))
+                (setq $end (next-single-property-change $beg 'face))
+                (overlay-put (make-overlay $beg $end) 'source-header t)
+                (setq $beg $end)
+                (goto-char $end))))
+          ;; Use selected line by [C-SPC] or [M-SPC]
+          (mapc (lambda ($ov)
+                  (when (overlay-get $ov 'source-header)
                     (setq $bufstr (concat (buffer-substring
                                            (overlay-start $ov) (overlay-end $ov))
-                                          $bufstr)))))
-              (overlays-in (point-min) (point-max)))
-        (if $mark
-            (progn (setq $bufstr (concat "Helm Multi Swoop\n" $bufstr))
-                   (setq $mark nil))
-          (setq $bufstr (concat "Helm Multi Swoop\n"
-                                (buffer-substring
-                                 (point-min) (point-max))))))
+                                          $bufstr)))
+                  (when (eq 'helm-visible-mark (overlay-get $ov 'face))
+                    (let (($str (buffer-substring (overlay-start $ov) (overlay-end $ov))))
+                      (unless (equal "" $str) (setq $mark t))
+                      (setq $bufstr (concat (buffer-substring
+                                             (overlay-start $ov) (overlay-end $ov))
+                                            $bufstr)))))
+                (overlays-in (point-min) (point-max)))
+          (if $mark
+              (progn (setq $bufstr (concat "Helm Multi Swoop\n" $bufstr))
+                     (setq $mark nil))
+            (setq $bufstr (concat "Helm Multi Swoop\n"
+                                  (buffer-substring
+                                   (point-min) (point-max)))))))
 
       ;; Set for edit buffer
       (insert $bufstr)
