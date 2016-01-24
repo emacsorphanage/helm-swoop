@@ -699,9 +699,8 @@ If $linum is number, lines are separated by $linum"
 (defun helm-swoop-yank-thing-at-point ()
   "Insert string at which the point helm-swoop started."
   (interactive)
-  (let ($amend
-        ($buf (get-buffer helm-swoop-synchronizing-window)))
-    (with-selected-window $buf
+  (let ($amend $buf)
+    (with-selected-window helm-swoop-synchronizing-window
       (setq $buf (get-buffer (cdr helm-swoop-last-point)))
       (when $buf
         (with-current-buffer $buf
