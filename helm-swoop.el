@@ -674,17 +674,6 @@ If $linum is number, lines are separated by $linum"
     ;; Restore helm's hook and window function etc
     (helm-swoop--restore)))
 
-;;;###autoload
-(defun helm-swoop-without-query ()
-  "Start helm-swoop without pre input query."
-  (interactive)
-  (let ((_helm-swoop-pre-input-function helm-swoop-pre-input-function))
-    (unwind-protect
-        (progn
-          (setq helm-swoop-pre-input-function (lambda () nil))
-          (helm-swoop))
-      (setq helm-swoop-pre-input-function _helm-swoop-pre-input-function))))
-
 ;; Receive word from isearch ---------------
 ;;;###autoload
 (defun helm-swoop-from-isearch ()
@@ -1291,6 +1280,19 @@ Last selected buffers will be applied to helm-multi-swoop.
   (interactive)
   (helm-multi-swoop-by-mode major-mode $query))
 
+(defun helm-swoop--wrap-function-with-pre-input-function ($target-func $pre-input-func)
+  (let (($restore helm-swoop-pre-input-function))
+    (unwind-protect
+        (progn
+          (setq helm-swoop-pre-input-function $pre-input-func)
+          (funcall $target-func))
+      (setq helm-swoop-pre-input-function $restore))))
+
+;;;###autoload
+(defun helm-swoop-without-pre-input ()
+  "Start helm-swoop without pre input query."
+  (interactive)
+  (helm-swoop--wrap-function-with-pre-input-function 'helm-swoop (lambda () nil)))
 
 ;; option -------------------------------------------------------
 

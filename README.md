@@ -137,7 +137,7 @@ i.e.
 ;; Disable pre-input
 (setq helm-swoop-pre-input-function
       (lambda () ""))
-;; Or, just use M-x helm-swoop-without-query
+;; Or, just use M-x helm-swoop-without-pre-input
 
 ;; Match only for symbol
 (setq helm-swoop-pre-input-function
