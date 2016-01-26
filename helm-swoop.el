@@ -459,6 +459,16 @@ This function needs to call after latest helm-swoop-line-overlay set."
         (helm-swoop--delete-overlay 'target-buffer)
         (helm-swoop--target-word-overlay 'target-buffer)))))
 
+(defun helm-swoop-flash-word ($match-beg $match-end)
+  (interactive)
+  (unwind-protect
+      (let (($o (make-overlay $match-beg $match-end)))
+        (when $o
+          (overlay-put $o 'face 'helm-swoop-target-word-face)
+          (overlay-put $o 'helm-swoop-overlay-word-frash t)))
+    (run-with-idle-timer
+     0.6 nil (lambda () (helm-swoop--delete-overlay 'helm-swoop-overlay-word-frash)))))
+
 ;; core ------------------------------------------------
 
 (defun helm-swoop--get-content ($buffer &optional $linum)
@@ -514,6 +524,7 @@ If $linum is number, lines are separated by $linum"
                       (when (or (and (and (featurep 'migemo) helm-migemo-mode)
                                      (migemo-forward $regex nil t))
                                 (re-search-forward $regex nil t))
+                        (helm-swoop-flash-word (match-beginning 0) (match-end 0))
                         (goto-char (match-beginning 0))))
                     (helm-swoop--recenter)))))
     ,(if (and helm-swoop-last-prefix-number
@@ -1065,6 +1076,7 @@ If $linum is number, lines are separated by $linum"
                                                      (split-string
                                                       helm-pattern " ") "\\|")
                                           nil t)
+                                     (helm-swoop-flash-word (match-beginning 0) (match-end 0))
                                      (goto-char (match-beginning 0)))
                                    (helm-swoop--recenter)))))))
                   (setq $preserve-position
