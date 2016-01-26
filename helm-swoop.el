@@ -552,7 +552,12 @@ If $linum is number, lines are separated by $linum"
 (defadvice narrow-to-region (around helm-swoop-advice-narrow-to-region activate)
   (helm-swoop--clear-cache)
   ad-do-it)
-
+(defadvice narrow-to-defun (around helm-swoop-advice-narrow-to-defun activate)
+  (helm-swoop--clear-cache)
+  ad-do-it)
+(defadvice narrow-to-page (around helm-swoop-advice-narrow-to-page activate)
+  (helm-swoop--clear-cache)
+  ad-do-it)
 (defadvice widen (around helm-swoop-advice-widen activate)
   (helm-swoop--clear-cache)
   ad-do-it)
@@ -668,6 +673,17 @@ If $linum is number, lines are separated by $linum"
                 :candidate-number-limit helm-swoop-candidate-number-limit)))
     ;; Restore helm's hook and window function etc
     (helm-swoop--restore)))
+
+;;;###autoload
+(defun helm-swoop-without-query ()
+  "Start helm-swoop without pre input query."
+  (interactive)
+  (let ((_helm-swoop-pre-input-function helm-swoop-pre-input-function))
+    (unwind-protect
+        (progn
+          (setq helm-swoop-pre-input-function (lambda () nil))
+          (helm-swoop))
+      (setq helm-swoop-pre-input-function _helm-swoop-pre-input-function))))
 
 ;; Receive word from isearch ---------------
 ;;;###autoload

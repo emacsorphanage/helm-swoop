@@ -130,15 +130,16 @@ You can configure this behavior by setting `helm-swoop-pre-input-function` on yo
 i.e.
 
 ```elisp
-;; use search query at the cursor  (default)
+;; Use search query at the cursor  (default)
 (setq helm-swoop-pre-input-function
       (lambda () (thing-at-point 'symbol)))
 
-;; disable pre-input
+;; Disable pre-input
 (setq helm-swoop-pre-input-function
       (lambda () ""))
+;; Or, just use M-x helm-swoop-without-query
 
-;; match only for symbol
+;; Match only for symbol
 (setq helm-swoop-pre-input-function
       (lambda () (format "\\_<%s\\_> " (thing-at-point 'symbol))))
 
