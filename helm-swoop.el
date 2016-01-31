@@ -1304,7 +1304,15 @@ Last selected buffers will be applied to helm-multi-swoop.
 (defun helm-swoop-without-pre-input ()
   "Start helm-swoop without pre input query."
   (interactive)
-  (helm-swoop--wrap-function-with-pre-input-function 'helm-swoop (lambda () nil)))
+  (helm-swoop--wrap-function-with-pre-input-function
+   'helm-swoop (lambda () nil)))
+
+;;;###autoload
+(defun helm-swoop-symble-pre-input ()
+  "Start helm-swoop without pre input query."
+  (interactive)
+  (helm-swoop--wrap-function-with-pre-input-function
+   'helm-swoop (lambda () (format "\\_<%s\\_> " (thing-at-point 'symbol)))))
 
 ;; option -------------------------------------------------------
 
