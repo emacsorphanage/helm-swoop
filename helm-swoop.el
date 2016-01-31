@@ -227,6 +227,9 @@
 (defsubst helm-swoop--recenter ()
   (recenter (/ (window-height) 2)))
 
+(defsubst helm-swoop--key-of-function ($function &optional $mode-map)
+  (edmacro-format-keys (car (where-is-internal $function $mode-map))))
+
 (defsubst helm-swoop--delete-overlay ($identity &optional $beg $end)
   (or $beg (setq $beg (point-min)))
   (or $end (setq $end (point-max)))
@@ -797,6 +800,7 @@ If $linum is number, lines are separated by $linum"
   (let (($map (make-sparse-keymap)))
     (define-key $map (kbd "C-x C-s") 'helm-swoop--edit-complete)
     (define-key $map (kbd "C-c C-g") 'helm-swoop--edit-cancel)
+    (define-key $map (kbd "C-c C-q C-k") 'helm-swoop--edit-delete-all-lines)
     $map))
 
 (defun helm-swoop--clear-edit-buffer ($prop)
@@ -867,8 +871,12 @@ If $linum is number, lines are separated by $linum"
           (overlay-put $o 'helm-swoop-edit t)
           (overlay-put $o 'face 'font-lock-function-name-face)
           (overlay-put $o 'after-string
-                       (propertize " [C-x C-s] Complete, [C-c C-g] Cancel"
-                                   'face 'helm-bookmark-addressbook)))
+                       (propertize
+                        (format " [%s] Complete, [%s] Cancel, [%s] Delete All"
+                                (helm-swoop--key-of-function 'helm-swoop--edit-complete helm-swoop-edit-map)
+                                (helm-swoop--key-of-function 'helm-swoop--edit-cancel helm-swoop-edit-map)
+                                (helm-swoop--key-of-function 'helm-swoop--edit-delete-all-lines helm-swoop-edit-map))
+                        'face 'helm-bookmark-addressbook)))
         ;; Line number and editable area
         (while (re-search-forward "^\\([0-9]+\s\\)\\(.*\\)$" nil t)
           (let* (($bol1 (match-beginning 1))
@@ -901,12 +909,33 @@ If $linum is number, lines are separated by $linum"
     (with-current-buffer helm-swoop-edit-target-buffer
       ;; Replace from the end of buffer
       (save-excursion
-      (cl-loop for ($k . $v) in $list
-            do (progn
-                 (goto-char (point-min))
-                 (delete-region (point-at-bol $k) (point-at-eol $k))
-                 (goto-char (point-at-bol $k))
-                 (insert $v)))))
+        (mapc (lambda ($cell)
+                (let (($k (car $cell))
+                      ($v (cdr $cell)))
+                  (goto-char (point-min))
+                  (delete-region (point-at-bol $k) (point-at-eol $k))
+                  (goto-char (point-at-bol $k))
+                  (insert $v)))
+              $list)))
+    (select-window helm-swoop-synchronizing-window)
+    (kill-buffer (get-buffer helm-swoop-edit-buffer)))
+  (message "Successfully helm-swoop-edit applied to original buffer"))
+
+(defun helm-swoop--edit-delete-all-lines ()
+  "Apply changes and kill temporary edit buffer"
+  (interactive)
+  (let (($list (helm-swoop--collect-edited-lines)))
+    (with-current-buffer helm-swoop-edit-target-buffer
+      ;; Replace from the end of buffer
+      (save-excursion
+        (mapc (lambda ($cell)
+                (let (($k (car $cell)))
+                  (goto-char (point-min))
+                  (delete-region (point-at-bol $k)
+                                 (if (eq (point-at-eol $k) (point-max))
+                                     (point-at-eol $k)
+                                   (1+ (point-at-eol $k))))))
+              $list)))
     (select-window helm-swoop-synchronizing-window)
     (kill-buffer (get-buffer helm-swoop-edit-buffer)))
   (message "Successfully helm-swoop-edit applied to original buffer"))
@@ -1370,6 +1399,7 @@ Last selected buffers will be applied to helm-multi-swoop.
   (let (($map (make-sparse-keymap)))
     (define-key $map (kbd "C-x C-s") 'helm-multi-swoop--edit-complete)
     (define-key $map (kbd "C-c C-g") 'helm-multi-swoop--edit-cancel)
+    (define-key $map (kbd "C-c C-q C-k") 'helm-multi-swoop--edit-delete-all-lines)
     $map))
 
 (defun helm-multi-swoop--edit ($candidate)
@@ -1429,8 +1459,12 @@ Last selected buffers will be applied to helm-multi-swoop.
           (overlay-put $o 'helm-multi-swoop-edit t)
           (overlay-put $o 'face 'font-lock-function-name-face)
           (overlay-put $o 'after-string
-                       (propertize " [C-x C-s] Complete, [C-c C-g] Cancel"
-                                   'face 'helm-bookmark-addressbook)))
+                       (propertize
+                        (format " [%s] Complete, [%s] Cancel, [%s] Delete All"
+                                (helm-swoop--key-of-function 'helm-swoop--edit-complete helm-swoop-edit-map)
+                                (helm-swoop--key-of-function 'helm-swoop--edit-cancel helm-swoop-edit-map)
+                                (helm-swoop--key-of-function 'helm-swoop--edit-delete-all-lines helm-swoop-edit-map))
+                        'face 'helm-bookmark-addressbook)))
         ;; Line number and editable area
         (while (re-search-forward "^\\([0-9]+\s\\)\\(.*\\)$" nil t)
           (let* (($bol1 (match-beginning 1))
@@ -1510,7 +1544,7 @@ Last selected buffers will be applied to helm-multi-swoop.
     (delete '(nil) $pairs)))
 
 (defun helm-multi-swoop--edit-complete ()
-  "Apply changes to buffers and kill temporary edit buffer"
+  "Delete all extracted lines, and apply changes to buffers and kill temporary edit buffer"
   (interactive)
   (let (($list (helm-multi-swoop--collect-edited-lines))
         $read-only)
@@ -1518,12 +1552,42 @@ Last selected buffers will be applied to helm-multi-swoop.
             (with-current-buffer (car $x)
               (unless buffer-read-only
                 (save-excursion
-                  (cl-loop for ($k . $v) in (cdr $x)
-                        do (progn
-                             (goto-char (point-min))
-                             (delete-region (point-at-bol $k) (point-at-eol $k))
-                             (goto-char (point-at-bol $k))
-                             (insert $v)))))
+                  (mapc (lambda ($cell)
+                          (let (($k (car $cell))
+                                ($v (cdr $cell)))
+                            (goto-char (point-min))
+                            (delete-region (point-at-bol $k) (point-at-eol $k))
+                            (goto-char (point-at-bol $k))
+                            (insert $v)))
+                        (cdr $x))))
+              (if helm-multi-swoop-edit-save
+                  (if buffer-read-only
+                      (setq $read-only t)
+                    (save-buffer)))))
+          $list)
+    (select-window helm-swoop-synchronizing-window)
+    (kill-buffer (get-buffer helm-multi-swoop-edit-buffer))
+    (if $read-only
+        (message "Couldn't save some buffers because of read-only")
+      (message "Successfully helm-multi-swoop-edit applied to original buffer"))))
+
+(defun helm-multi-swoop--edit-delete-all-lines ()
+  "Delete all extracted lines, and apply changes to buffers and kill temporary edit buffer"
+  (interactive)
+  (let (($list (helm-multi-swoop--collect-edited-lines))
+        $read-only)
+    (mapc (lambda ($x)
+            (with-current-buffer (car $x)
+              (unless buffer-read-only
+                (save-excursion
+                  (mapc (lambda ($cell)
+                          (let (($k (car $cell)))
+                            (goto-char (point-min))
+                            (delete-region (point-at-bol $k)
+                                           (if (eq (point-at-eol $k) (point-max))
+                                               (point-at-eol $k)
+                                             (1+ (point-at-eol $k))))))
+                        (cdr $x))))
               (if helm-multi-swoop-edit-save
                   (if buffer-read-only
                       (setq $read-only t)
