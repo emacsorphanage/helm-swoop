@@ -7,7 +7,7 @@
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
 ;; Keywords: helm swoop inner buffer search
-;; Package-Requires: ((helm "1.0") (emacs "24"))
+;; Package-Requires: ((helm "1.0") (emacs "24.3"))
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -158,7 +158,7 @@
 (defvar helm-swoop-list-cache)
 (defvar helm-swoop-pattern)            ; Keep helm-pattern value
 (defvar helm-swoop-last-query)         ; Last search query for resume
-(defvar helm-swoop-last-prefix-number) ; For multiline highlight
+(defvar-local helm-swoop-last-prefix-number 1) ; For multiline highlight
 
 ;; Global variables
 (defvar helm-swoop-synchronizing-window nil
@@ -549,14 +549,10 @@ If $linum is number, lines are separated by $linum"
     (match . ,(helm-swoop-match-functions))
     (search . ,(helm-swoop-search-functions))))
 
-(defun helm-swoop--set-prefix (&optional $multiline)
+(defun helm-swoop--set-prefix ($multiline)
   ;; Enable scrolling margin
-  (if (boundp 'helm-swoop-last-prefix-number)
-      (setq helm-swoop-last-prefix-number
-            (or $multiline 1)) ;; $multiline is for resume
-    (set (make-local-variable 'helm-swoop-last-prefix-number)
-         (or $multiline 1))))
-(helm-swoop--set-prefix) ;; Silence error "Warning: reference to free variable"
+  (setq helm-swoop-last-prefix-number
+        (or $multiline 1))) ;; $multiline is for resume
 
 ;; Delete cache when modified file is saved
 (defun helm-swoop--clear-cache ()
