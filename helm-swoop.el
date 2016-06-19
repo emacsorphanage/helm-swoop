@@ -92,6 +92,9 @@
 (require 'helm-grep)
 
 (declare-function migemo-search-pattern-get "migemo")
+(declare-function projectile-buffers-with-file-or-process "projectile")
+(declare-function projectile-project-buffers "projectile")
+(defvar projectile-buffers-filter-function)
 
 ;;; @ helm-swoop ----------------------------------------------
 
