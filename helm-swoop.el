@@ -150,6 +150,15 @@
     (switch-to-buffer $buf))
   "Change the way to split window only when `helm-swoop' is calling")
 
+(defcustom helm-swoop-after-goto-line-action-hook nil
+  "hooks run after `helm-swoop--goto-line"
+  :group 'helm-swoop
+  :type 'hook)
+(defcustom helm-swoop-before-goto-line-action-hook nil
+  "hooks run before `helm-swoop--goto-line"
+  :group 'helm-swoop
+  :type 'hook)
+
 (defvar helm-swoop-candidate-number-limit 19999)
 (defvar helm-swoop-buffer "*Helm Swoop*")
 (defvar helm-swoop-prompt "Swoop: ")
@@ -503,6 +512,23 @@ If $linum is number, lines are separated by $linum"
             (setq $return (helm-swoop--buffer-substring (point-min) (point-max))))
           $return)))))
 
+(defun helm-swoop--goto-line-action ($line)
+  (run-hooks 'helm-swoop-before-goto-line-action-hook)
+  (helm-swoop--goto-line
+   (when (string-match "^[0-9]+" $line)
+     (string-to-number (match-string 0 $line))))
+  (let (($regex
+         (mapconcat 'identity
+                    (split-string helm-pattern " ")
+                    "\\|")))
+    (when (or (and (and (featurep 'migemo) helm-migemo-mode)
+                   (migemo-forward $regex nil t))
+              (re-search-forward $regex nil t))
+      (helm-swoop-flash-word (match-beginning 0) (match-end 0))
+      (goto-char (match-beginning 0))
+      (run-hooks 'helm-swoop-after-goto-line-action-hook)))
+  (helm-swoop--recenter))
+
 (defun helm-c-source-swoop ()
   `((name . ,(buffer-name helm-swoop-target-buffer))
     (candidates . ,(if helm-swoop-list-cache
@@ -518,21 +544,7 @@ If $linum is number, lines are separated by $linum"
                    'buffer-substring-no-properties))
     (keymap . ,helm-swoop-map)
     (header-line . "[C-c C-e] Edit mode, [M-i] apply all buffers")
-    (action . (("Go to Line"
-                . (lambda ($line)
-                    (helm-swoop--goto-line
-                     (when (string-match "^[0-9]+" $line)
-                       (string-to-number (match-string 0 $line))))
-                    (let (($regex
-                           (mapconcat 'identity
-                                      (split-string helm-pattern " ")
-                                      "\\|")))
-                      (when (or (and (and (featurep 'migemo) helm-migemo-mode)
-                                     (migemo-forward $regex nil t))
-                                (re-search-forward $regex nil t))
-                        (helm-swoop-flash-word (match-beginning 0) (match-end 0))
-                        (goto-char (match-beginning 0))))
-                    (helm-swoop--recenter)))))
+    (action . (("Go to Line" . helm-swoop--goto-line-action)))
     ,(if (and helm-swoop-last-prefix-number
               (> helm-swoop-last-prefix-number 1))
          '(multiline))
