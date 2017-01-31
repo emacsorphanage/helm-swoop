@@ -517,7 +517,9 @@ If $linum is number, lines are separated by $linum"
                      'helm-swoop--buffer-substring
                    'buffer-substring-no-properties))
     (keymap . ,helm-swoop-map)
-    (header-line . "[C-c C-e] Edit mode, [M-i] apply all buffers")
+    (header-line . ,(substitute-command-keys
+                     "[\\<helm-swoop-map>\\[helm-swoop-edit]] Edit mode, \
+[\\<helm-swoop-map>\\[helm-multi-swoop-all-from-helm-swoop]] apply all buffers"))
     (action . (("Go to Line"
                 . (lambda ($line)
                     (helm-swoop--goto-line
@@ -543,7 +545,9 @@ If $linum is number, lines are separated by $linum"
   `((name . ,$buf)
     (candidates . ,(funcall $func))
     (action . ,$action)
-    (header-line . ,(concat $buf "    [C-c C-e] Edit mode"))
+    (header-line . ,(concat $buf
+                            (substitute-command-keys
+                             "    [\\<helm-multi-swoop-map>\\[helm-multi-swoop-edit]] Edit mode")))
     (keymap . ,helm-multi-swoop-map)
     (requires-pattern . 2)
     ,(if (and $multiline
