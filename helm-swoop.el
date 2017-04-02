@@ -122,6 +122,9 @@
 (defcustom helm-swoop-speed-or-color nil
  "If nil, you can slightly boost invoke speed in exchange for text color"
  :group 'helm-swoop :type 'boolean)
+(defcustom helm-swoop-show-line-numbers t
+  "Show line numbers."
+  :type 'boolean)
 (defcustom helm-swoop-use-line-number-face nil
   "Use face to line numbers on helm-swoop buffer"
   :group 'helm-swoop :type 'boolean)
@@ -483,25 +486,31 @@ If $linum is number, lines are separated by $linum"
   (let (($buf (get-buffer $buffer)))
     (when $buf
       (with-current-buffer $buf
-        (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max)))
-              $return)
+        (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max))))
           (with-temp-buffer
+            ;; Insert all content
             (insert $bufstr)
-            (goto-char (point-min))
-            (let (($i 1))
-              (insert (format "%s " $i))
-              (while (re-search-forward "\n" nil t)
-                (cl-incf $i)
-                (if helm-swoop-use-line-number-face
-                    (insert (propertize (format "%s" $i) 'font-lock-face 'helm-swoop-line-number-face) " ")
-                  (insert (format "%s " $i))))
-              ;; Delete empty lines
-              (unless $linum
+            (when helm-swoop-show-line-numbers
+              ;; Add line numbers
+              (let ((line-number 1))
                 (goto-char (point-min))
-                (while (re-search-forward "^[0-9]+\\s-*$" nil t)
-                  (replace-match ""))))
-            (setq $return (helm-swoop--buffer-substring (point-min) (point-max))))
-          $return)))))
+                (insert (helm-swoop--propertize-line-number line-number) " ")
+                (while (re-search-forward "\n" nil t)
+                  (cl-incf line-number)
+                  (insert (helm-swoop--propertize-line-number line-number) " "))))
+            (unless $linum
+              ;; Delete empty lines
+              (goto-char (point-min))
+              (while (re-search-forward "^[0-9]+\\s-*$" nil t)
+                (replace-match "")))
+            ;; Return string for Helm buffer
+            (helm-swoop--buffer-substring (point-min) (point-max))))))))
+
+(defsubst helm-swoop--propertize-line-number (line-number)
+  "Return LINE-NUMBER as string, propertized"
+  (if helm-swoop-use-line-number-face
+      (propertize (format "%s" line-number) 'font-lock-face 'helm-swoop-line-number-face)
+    (format "%s" line-number)))
 
 (defun helm-c-source-swoop ()
   `((name . ,(buffer-name helm-swoop-target-buffer))
