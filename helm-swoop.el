@@ -1152,8 +1152,9 @@ If $linum is number, lines are separated by $linum"
                   :candidate-number-limit
                   helm-multi-swoop-candidate-number-limit
                   :preselect
-                  (format "%s %s" (line-number-at-pos)
-                          (helm-swoop--get-string-at-line)))))
+                  (regexp-quote
+                   (format "%s %s" (line-number-at-pos)
+                           (helm-swoop--get-string-at-line))))))
       ;; Restore
       (progn
         (when (= 1 helm-exit-status)
