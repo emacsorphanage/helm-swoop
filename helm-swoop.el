@@ -239,9 +239,6 @@
 (defsubst helm-swoop--recenter ()
   (recenter (/ (window-height) 2)))
 
-(defsubst helm-swoop--key-of-function ($function &optional $mode-map)
-  (edmacro-format-keys (car (where-is-internal $function $mode-map))))
-
 (defsubst helm-swoop--delete-overlay ($identity &optional $beg $end)
   (or $beg (setq $beg (point-min)))
   (or $end (setq $end (point-max)))
@@ -887,10 +884,12 @@ If $linum is number, lines are separated by $linum"
           (overlay-put $o 'face 'font-lock-function-name-face)
           (overlay-put $o 'after-string
                        (propertize
-                        (format " [%s] Complete, [%s] Cancel, [%s] Delete All"
-                                (helm-swoop--key-of-function 'helm-swoop--edit-complete helm-swoop-edit-map)
-                                (helm-swoop--key-of-function 'helm-swoop--edit-cancel helm-swoop-edit-map)
-                                (helm-swoop--key-of-function 'helm-swoop--edit-delete-all-lines helm-swoop-edit-map))
+                        (substitute-command-keys
+                         (concat
+                          " [\\<helm-swoop-edit-map>\\[helm-swoop--edit-complete]] Complete"
+                          ", [\\<helm-swoop-edit-map>\\[helm-swoop--edit-cancel]] Cancel"
+                          ", [\\<helm-swoop-edit-map>\\[helm-swoop--edit-delete-all-lines]] Delete All"
+                         ))
                         'face 'helm-bookmark-addressbook)))
         ;; Line number and editable area
         (while (re-search-forward "^\\([0-9]+\s\\)\\(.*\\)$" nil t)
@@ -1473,10 +1472,12 @@ Last selected buffers will be applied to helm-multi-swoop.
           (overlay-put $o 'face 'font-lock-function-name-face)
           (overlay-put $o 'after-string
                        (propertize
-                        (format " [%s] Complete, [%s] Cancel, [%s] Delete All"
-                                (helm-swoop--key-of-function 'helm-swoop--edit-complete helm-swoop-edit-map)
-                                (helm-swoop--key-of-function 'helm-swoop--edit-cancel helm-swoop-edit-map)
-                                (helm-swoop--key-of-function 'helm-swoop--edit-delete-all-lines helm-swoop-edit-map))
+                        (substitute-command-keys
+                         (concat
+                          " [\\<helm-swoop-edit-map>\\[helm-swoop--edit-complete]] Complete"
+                          ", [\\<helm-swoop-edit-map>\\[helm-swoop--edit-cancel]] Cancel"
+                          ", [\\<helm-swoop-edit-map>\\[helm-swoop--edit-delete-all-lines]] Delete All"
+                          ))
                         'face 'helm-bookmark-addressbook)))
         ;; Line number and editable area
         (while (re-search-forward "^\\([0-9]+\s\\)\\(.*\\)$" nil t)
