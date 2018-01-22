@@ -140,16 +140,21 @@
   "If t, use fuzzy matching functions as well as exact matches."
   :group 'helm-swoop :type 'boolean)
 
-(defvar helm-swoop-split-window-function
-  (lambda ($buf)
-   (if helm-swoop-split-with-multiple-windows
-       (funcall helm-swoop-split-direction)
-       (when (one-window-p)
-        (funcall helm-swoop-split-direction)))
-    (other-window 1)
-    (switch-to-buffer $buf))
-  "Change the way to split window only when `helm-swoop' is calling")
+(defun helm-swoop--split-window-default ($buf &optional resume)
+  "Split window according to `helm-swoop-split-with-multiple-windows'
+and `helm-swoop-split-direction' settings."
+  (if helm-swoop-split-with-multiple-windows
+      (funcall helm-swoop-split-direction)
+    (when (one-window-p)
+      (funcall helm-swoop-split-direction)))
+  (other-window 1)
+  (switch-to-buffer $buf)
+  )
 
+(defcustom helm-swoop-split-window-function #'helm-swoop--split-window-default
+  "Function to use as `helm-display-function'."
+  :group 'helm-swoop
+  :type 'function)
 (defcustom helm-swoop-after-goto-line-action-hook nil
   "hooks run after `helm-swoop--goto-line"
   :group 'helm-swoop
@@ -685,6 +690,7 @@ If $linum is number, lines are separated by $linum"
                 (or $source
                     (helm-c-source-swoop))
                 :buffer helm-swoop-buffer
+                :display-function helm-swoop-split-window-function
                 :input $query
                 :prompt helm-swoop-prompt
                 :preselect
@@ -1162,6 +1168,7 @@ If $linum is number, lines are separated by $linum"
                 (helm-completion-window-scroll-margin 5))
             (helm :sources $contents
                   :buffer helm-multi-swoop-buffer
+                  :display-function helm-swoop-split-window-function
                   :input (or $query helm-multi-swoop-query "")
                   :prompt helm-swoop-prompt
                   :candidate-number-limit
