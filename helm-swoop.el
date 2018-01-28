@@ -141,7 +141,7 @@
   :group 'helm-swoop :type 'boolean)
 
 (defvar helm-swoop-split-window-function
-  (lambda ($buf)
+  (lambda ($buf &optional resume)
    (if helm-swoop-split-with-multiple-windows
        (funcall helm-swoop-split-direction)
        (when (one-window-p)
