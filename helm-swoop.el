@@ -140,16 +140,20 @@
   "If t, use fuzzy matching functions as well as exact matches."
   :group 'helm-swoop :type 'boolean)
 
-(defvar helm-swoop-split-window-function
-  (lambda ($buf)
-   (if helm-swoop-split-with-multiple-windows
-       (funcall helm-swoop-split-direction)
-       (when (one-window-p)
-        (funcall helm-swoop-split-direction)))
-    (other-window 1)
-    (switch-to-buffer $buf))
-  "Change the way to split window only when `helm-swoop' is calling")
+(defun helm-swoop--split-window-default ($buf &optional resume)
+  "Split window according to `helm-swoop-split-with-multiple-windows'
+and `helm-swoop-split-direction' settings."
+  (if helm-swoop-split-with-multiple-windows
+      (funcall helm-swoop-split-direction)
+    (when (one-window-p)
+      (funcall helm-swoop-split-direction)))
+  (other-window 1)
+  (switch-to-buffer $buf))
 
+(defcustom helm-swoop-split-window-function #'helm-swoop--split-window-default
+  "Function to use as `helm-display-function'."
+  :group 'helm-swoop
+  :type 'function)
 (defcustom helm-swoop-after-goto-line-action-hook nil
   "hooks run after `helm-swoop--goto-line"
   :group 'helm-swoop
