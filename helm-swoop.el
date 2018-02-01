@@ -148,8 +148,7 @@ and `helm-swoop-split-direction' settings."
     (when (one-window-p)
       (funcall helm-swoop-split-direction)))
   (other-window 1)
-  (switch-to-buffer $buf)
-  )
+  (switch-to-buffer $buf))
 
 (defcustom helm-swoop-split-window-function #'helm-swoop--split-window-default
   "Function to use as `helm-display-function'."
@@ -690,7 +689,6 @@ If $linum is number, lines are separated by $linum"
                 (or $source
                     (helm-c-source-swoop))
                 :buffer helm-swoop-buffer
-                :display-function helm-swoop-split-window-function
                 :input $query
                 :prompt helm-swoop-prompt
                 :preselect
@@ -1168,7 +1166,6 @@ If $linum is number, lines are separated by $linum"
                 (helm-completion-window-scroll-margin 5))
             (helm :sources $contents
                   :buffer helm-multi-swoop-buffer
-                  :display-function helm-swoop-split-window-function
                   :input (or $query helm-multi-swoop-query "")
                   :prompt helm-swoop-prompt
                   :candidate-number-limit
