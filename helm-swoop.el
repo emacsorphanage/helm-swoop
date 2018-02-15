@@ -1,8 +1,8 @@
 ;;; helm-swoop.el --- Efficiently hopping squeezed lines powered by helm interface -*- coding: utf-8; lexical-binding: t -*-
 
-;; Copyright (C) 2013 - 2017 by Shingo Fukuyama
+;; Copyright (C) 2013 - 2018 by Shingo Fukuyama
 
-;; Version: 1.7.3
+;; Version: 1.7.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
