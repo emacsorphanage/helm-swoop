@@ -1125,7 +1125,7 @@ If $linum is number, lines are separated by $linum"
                                      (helm-swoop-flash-word (match-beginning 0) (match-end 0))
                                      (goto-char (match-beginning 0)))
                                    (helm-swoop--recenter)))
-                              ("Edit" . helm-multi-swoop--edit))
+                              ("Edit" . helm-multi-swoop--edit))))))
                   (setq $preserve-position
                         (cons (cons $buf (point)) $preserve-position))
                   (setq
