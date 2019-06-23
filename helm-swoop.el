@@ -139,6 +139,9 @@
 (defcustom helm-swoop-use-fuzzy-match nil
   "If t, use fuzzy matching functions as well as exact matches."
   :group 'helm-swoop :type 'boolean)
+(defcustom helm-swoop-min-overlay-length 2
+  "Minimum pattern length before applying the overlay on the matched word."
+  :group 'helm-swoop :type 'integer)
 
 (defvar helm-swoop-split-window-function
   (lambda ($buf &rest _$args)
@@ -464,12 +467,12 @@ This function needs to call after latest helm-swoop-line-overlay set."
   "Overlay target words"
   (with-helm-window
     (setq helm-swoop-pattern helm-pattern)
-    (when (< 2 (length helm-pattern))
+    (when (< helm-swoop-min-overlay-length (length helm-pattern))
       (helm-swoop--delete-overlay 'target-buffer)
-      (helm-swoop--target-word-overlay 'target-buffer)
+      (helm-swoop--target-word-overlay 'target-buffer helm-swoop-min-overlay-length)
       (with-selected-window helm-swoop-synchronizing-window
         (helm-swoop--delete-overlay 'target-buffer)
-        (helm-swoop--target-word-overlay 'target-buffer)))))
+        (helm-swoop--target-word-overlay 'target-buffer helm-swoop-min-overlay-length)))))
 
 (defun helm-swoop-flash-word ($match-beg $match-end)
   (interactive)
