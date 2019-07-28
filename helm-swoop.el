@@ -546,7 +546,8 @@ If $linum is number, lines are separated by $linum"
     (header-line . ,(substitute-command-keys
                      "[\\<helm-swoop-map>\\[helm-swoop-edit]] Edit mode, \
 [\\<helm-swoop-map>\\[helm-multi-swoop-all-from-helm-swoop]] apply all buffers"))
-    (action . (("Go to Line" . helm-swoop--goto-line-action)))
+    (action . (("Go to Line" . helm-swoop--goto-line-action)
+               ("Swoop Edit" . helm-swoop--edit)))
     ,(if (and helm-swoop-last-prefix-number
               (> helm-swoop-last-prefix-number 1))
          '(multiline))
@@ -1127,7 +1128,8 @@ If $linum is number, lines are separated by $linum"
                                           nil t)
                                      (helm-swoop-flash-word (match-beginning 0) (match-end 0))
                                      (goto-char (match-beginning 0)))
-                                   (helm-swoop--recenter)))))))
+                                   (helm-swoop--recenter)))
+                              ("Multi Swoop Edit" . helm-multi-swoop--edit)))))
                   (setq $preserve-position
                         (cons (cons $buf (point)) $preserve-position))
                   (setq
