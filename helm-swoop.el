@@ -7,7 +7,7 @@
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
 ;; Keywords: helm swoop inner buffer search
-;; Package-Requires: ((helm "1.0") (emacs "24.3"))
+;; Package-Requires: ((helm "3.2") (emacs "24.3"))
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -744,7 +744,7 @@ If $linum is number, lines are separated by $linum"
 
 ;; For helm-resume ------------------------
 (defadvice helm-resume-select-buffer
-  (around helm-swoop-if-selected-as-resume activate)
+    (around helm-swoop-if-selected-as-resume activate)
   "Resume if *Helm Swoop* buffer selected as a resume
  when helm-resume with prefix"
   (if (boundp 'helm-swoop-last-query)
