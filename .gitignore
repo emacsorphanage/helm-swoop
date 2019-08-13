@@ -1,1 +1,12 @@
+## .gitignore
+
+# make temporary folder
+/.make
+
+# Emacs Lisp compiled files
 *.elc
+
+# dependent files
+helm/
+async/
+popup/
