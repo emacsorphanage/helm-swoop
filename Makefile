@@ -50,7 +50,7 @@ build: $(ELS:%.el=%.elc)
 
 ##############################
 
-fix-indent:
+fix-indent: $(DEPENDS)
 	$(EMACS) $(DEPENDS:%=-L %/) --batch --eval "\
 (progn \
   (require 'cl-macs) \
