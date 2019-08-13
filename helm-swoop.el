@@ -2,12 +2,12 @@
 
 ;; Copyright (C) 2013 - 2018 by Shingo Fukuyama
 
-;; Version: 1.7.4
+;; Version: 2.0.0
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
 ;; Keywords: helm swoop inner buffer search
-;; Package-Requires: ((helm "1.0") (emacs "24.3"))
+;; Package-Requires: ((helm "3.2") (emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -92,6 +92,7 @@
 (require 'helm-grep)
 
 (declare-function migemo-search-pattern-get "migemo")
+(declare-function migemo-forward "migemo")
 (declare-function projectile-buffers-with-file-or-process "projectile")
 (declare-function projectile-project-buffers "projectile")
 (defvar projectile-buffers-filter-function)
@@ -613,7 +614,7 @@ If $linum is number, lines are separated by $linum"
     (helm-swoop-back-to-last-point t)
     (helm-swoop--restore-unveiled-overlay))
   (setq helm-swoop-invisible-targets nil)
-  (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
+  (remove-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
   (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
   (setq helm-swoop-last-query helm-swoop-pattern)
   (mapc (lambda ($ov)
@@ -1159,7 +1160,7 @@ If $linum is number, lines are separated by $linum"
           (helm-swoop-back-to-last-point t)
           (helm-swoop--restore-unveiled-overlay))
         (setq helm-swoop-invisible-targets nil)
-        (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
+        (remove-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
         (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
         (setq helm-multi-swoop-last-query helm-swoop-pattern)
         (helm-swoop--restore-unveiled-overlay)
