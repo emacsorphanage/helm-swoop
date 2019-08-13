@@ -265,14 +265,7 @@
   :group 'helm-swoop :type 'function)
 
 (defun helm-swoop-pre-input-optimize ($query)
-  (when $query
-    (let (($regexp (list '("\+" . "\\\\+")
-                         '("\*" . "\\\\*")
-                         '("\#" . "\\\\#"))))
-      (mapc (lambda ($r)
-              (setq $query (replace-regexp-in-string (car $r) (cdr $r) $query)))
-            $regexp)
-      $query)))
+  (regexp-quote $query))
 
 (defsubst helm-swoop--goto-line ($line)
   (goto-char (point-min))
