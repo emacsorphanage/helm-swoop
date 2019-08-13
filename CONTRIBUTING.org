@@ -1,0 +1,78 @@
+#+date: <2019-08-13 Tue>
+
+* Contributing helm-swoop
+This is a simple guide to contribute to ~helm-swoop~.
+
+** Simple steps
+#+begin_src bash
+  # clone this repository
+  cd ~/dev
+  hub clone emacsorphanage/helm-swoop
+
+  # move local repository, install git-hook.
+  cd helm-swoop
+  make
+
+  # create fork and craete PR branch
+  hub fork
+  hub checkout -b fix-something
+
+
+  #### <file_edit_loop> ########
+
+  # let's hack helm-swoop!!
+  emacs helm-swoop
+
+  # commit your changes
+  hub commit -am "fix-something"
+
+  #### </file_edit_loop> #######
+
+
+  # push your branch and create pull-request
+  hub push origin fix-something
+  hub pull-request
+#+end_src
+
+** Testing helm-swoop
+If you get output like this when every commit and when runnning ~make test -j~, our request will be satisfied.
+
+#+begin_src bash
+  docker run -itd --name 85CC7A4-emacs-test--ubuntu-min-24.4 conao3/emacs:ubuntu-min-24.4 /bin/sh > /dev/null
+  docker run -itd --name 85CC7A4-emacs-test--ubuntu-min-24.5 conao3/emacs:ubuntu-min-24.5 /bin/sh > /dev/null
+  docker run -itd --name 85CC7A4-emacs-test--ubuntu-min-25.1 conao3/emacs:ubuntu-min-25.1 /bin/sh > /dev/null
+  docker run -itd --name 85CC7A4-emacs-test--alpine-min-25.3 conao3/emacs:alpine-min-25.3 /bin/sh > /dev/null
+  docker run -itd --name 85CC7A4-emacs-test--alpine-min-26.1 conao3/emacs:alpine-min-26.1 /bin/sh > /dev/null
+  docker run -itd --name 85CC7A4-emacs-test--alpine-min-26.2 conao3/emacs:alpine-min-26.2 /bin/sh > /dev/null
+
+  Loading /test/cort-test.el (source)...
+  Loading /test/cort-test.el (source)...
+  Loading /test/cort-test.el (source)...
+  Loading /test/cort-test.el (source)...
+  Loading /test/cort-test.el (source)...
+  Loading /test/cort-test.el (source)...
+
+  ===== Run  0 Tests,  0 Expected,  0 Failed,  0 Errored on Emacs-24.4.1 =====
+  ===== Run  0 Tests,  0 Expected,  0 Failed,  0 Errored on Emacs-24.5.1 =====
+  ===== Run  0 Tests,  0 Expected,  0 Failed,  0 Errored on Emacs-25.1.1 =====
+  ===== Run  0 Tests,  0 Expected,  0 Failed,  0 Errored on Emacs-25.3.1 =====
+  ===== Run  0 Tests,  0 Expected,  0 Failed,  0 Errored on Emacs-26.1 =====
+  ===== Run  0 Tests,  0 Expected,  0 Failed,  0 Errored on Emacs-26.2 =====
+#+end_src
+
+You also use ~make check~ to show all test log and ~make allcheck~ to show all test log of all Emacs.
+
+** Add testcase
+You solve some issue or you add some new feature,
+you should add testcase to ensure helm-swoop.el work well in the future.
+
+I don't care where it is. Create a new cort-test block or add a test to an existing testcase block.
+
+If testcases cited in the README, it should also be corrected.
+
+** Fix indentation
+If you are concerned about indentation problems, we have a command called =make fix-indent=
+But this script is a bit dangerous because it overwrites without confirmation.
+
+Commit before executing this command, and if the script automatically corrects the indentation,
+you can do an amend commit.
