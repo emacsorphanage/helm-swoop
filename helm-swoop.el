@@ -571,10 +571,11 @@ If $linum is number, lines are separated by $linum"
   (setq helm-swoop-last-prefix-number
         (or $multiline 1))) ;; $multiline is for resume
 
-;; Delete cache when modified file is saved
+;; Delete cache when buffer is saved or file changes on disk
 (defun helm-swoop--clear-cache ()
   (if (boundp 'helm-swoop-list-cache) (setq helm-swoop-list-cache nil)))
 (add-hook 'after-save-hook 'helm-swoop--clear-cache)
+(add-hook 'after-revert-hook 'helm-swoop--clear-cache)
 
 (defadvice narrow-to-region (around helm-swoop-advice-narrow-to-region activate)
   (helm-swoop--clear-cache)
