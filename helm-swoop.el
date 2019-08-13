@@ -160,6 +160,14 @@
   :group 'helm-swoop
   :type 'hook)
 
+(defcustom helm-swoop-flash-region-function 'helm-swoop-flash-word
+  "The function used to flash the result when a search done."
+  :group 'helm-swoop
+  :type '(choice
+          (const :tag "Default highlight function" helm-swoop-flash-word)
+          (const :tag "Pulse highlight function" pulse-momentary-highlight-region)
+          function))
+
 (defvar helm-swoop-candidate-number-limit 19999)
 (defvar helm-swoop-buffer "*Helm Swoop*")
 (defvar helm-swoop-prompt "Swoop: ")
@@ -524,7 +532,8 @@ If $linum is number, lines are separated by $linum"
     (when (or (and (and (featurep 'migemo) helm-migemo-mode)
                    (migemo-forward $regex nil t))
               (re-search-forward $regex nil t))
-      (helm-swoop-flash-word (match-beginning 0) (match-end 0))
+      (funcall helm-swoop-flash-region-function
+               (match-beginning 0) (match-end 0))
       (goto-char (match-beginning 0))
       (run-hooks 'helm-swoop-after-goto-line-action-hook)))
   (helm-swoop--recenter))
@@ -1126,7 +1135,8 @@ If $linum is number, lines are separated by $linum"
                                                      (split-string
                                                       helm-pattern " ") "\\|")
                                           nil t)
-                                     (helm-swoop-flash-word (match-beginning 0) (match-end 0))
+                                     (funcall helm-swoop-flash-region-function
+                                              (match-beginning 0) (match-end 0))
                                      (goto-char (match-beginning 0)))
                                    (helm-swoop--recenter)))
                               ("Multi Swoop Edit" . helm-multi-swoop--edit)))))
