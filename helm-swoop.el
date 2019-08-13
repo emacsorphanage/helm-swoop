@@ -654,7 +654,7 @@ If $linum is number, lines are separated by $linum"
   (unwind-protect
       (progn
         ;; For synchronizing line position
-        (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
+        (add-hook 'helm-after-update-hook 'helm-swoop--pattern-match)
         (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
         (cond ($query
                (if (string-match
