@@ -16,7 +16,7 @@ TOP          := $(dir $(lastword $(MAKEFILE_LIST)))
 
 UUID         := $(shell ((uuidgen > /dev/null 2>&1 && uuidgen) || echo $$) | cut -c -7)
 
-UBUNTU_EMACS := 24.5 25.1
+UBUNTU_EMACS := 24.4 24.5 25.1
 ALPINE_EMACS := 25.3 26.1 26.2
 DOCKER_EMACS := $(UBUNTU_EMACS:%=ubuntu-min-%) $(ALPINE_EMACS:%=alpine-min-%)
 
