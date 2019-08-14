@@ -359,9 +359,9 @@
 
 (defun helm-swoop--target-word-overlay ($identity &optional $threshold)
   (interactive)
-  (or $threshold (setq $threshold 2))
   (save-excursion
     (let (($pat (split-string helm-pattern " "))
+          ($threshold (or $threshold 2))
           $o)
       (mapc (lambda ($wd)
               (when (and (helm-swoop--validate-regexp $wd) (< $threshold (length $wd)))
