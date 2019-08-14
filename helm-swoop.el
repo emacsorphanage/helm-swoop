@@ -1660,4 +1660,9 @@ Last selected buffers will be applied to helm-multi-swoop.
    :$buflist (helm-multi-swoop--get-buffer-list)))
 
 (provide 'helm-swoop)
+
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:
+
 ;;; helm-swoop.el ends here
