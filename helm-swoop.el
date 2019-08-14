@@ -282,13 +282,11 @@
   (recenter (/ (window-height) 2)))
 
 (defsubst helm-swoop--delete-overlay ($identity &optional $beg $end)
-  (or $beg (setq $beg (point-min)))
-  (or $end (setq $end (point-max)))
-  (overlay-recenter $end)
+  (overlay-recenter (or $end (point-max)))
   (mapc (lambda ($o)
           (if (overlay-get $o $identity)
               (delete-overlay $o)))
-        (overlays-in $beg $end)))
+        (overlays-in (or $beg (point-min)) (or $end (point-max)))))
 
 (defsubst helm-swoop--get-string-at-line ()
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
