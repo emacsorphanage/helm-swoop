@@ -507,8 +507,7 @@ If $linum is number, lines are separated by $linum"
   (let (($buf (get-buffer $buffer)))
     (when $buf
       (with-current-buffer $buf
-        (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max)))
-              $return)
+        (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max))))
           (with-temp-buffer
             (insert $bufstr)
             (goto-char (point-min))
@@ -524,8 +523,7 @@ If $linum is number, lines are separated by $linum"
                 (goto-char (point-min))
                 (while (re-search-forward "^[0-9]+\\s-*$" nil t)
                   (replace-match ""))))
-            (setq $return (helm-swoop--buffer-substring (point-min) (point-max))))
-          $return)))))
+            (helm-swoop--buffer-substring (point-min) (point-max))))))))
 
 (defun helm-swoop--goto-line-action ($line)
   (run-hooks 'helm-swoop-before-goto-line-action-hook)
