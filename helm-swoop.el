@@ -410,12 +410,11 @@ This function needs to call after latest helm-swoop-line-overlay set."
       ;; Synchronizing line position
       (when (and $key $num)
         (with-selected-window helm-swoop-synchronizing-window
-          (progn
-            (helm-swoop--goto-line $num)
-            (with-current-buffer helm-swoop-target-buffer
-              (delete-overlay helm-swoop-line-overlay)
-              (helm-swoop--target-line-overlay-move))
-            (helm-swoop--recenter)))
+          (helm-swoop--goto-line $num)
+          (with-current-buffer helm-swoop-target-buffer
+            (delete-overlay helm-swoop-line-overlay)
+            (helm-swoop--target-line-overlay-move))
+          (helm-swoop--recenter))
         (setq helm-swoop-last-line-info
               (cons helm-swoop-target-buffer $num))))))
 
