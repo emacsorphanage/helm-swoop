@@ -266,7 +266,7 @@
   :group 'helm-swoop :type 'function)
 
 (defun helm-swoop-pre-input-optimize ($query)
-  (regexp-quote $query))
+  (when $query (regexp-quote $query)))
 
 (defsubst helm-swoop--goto-line ($line)
   (goto-char (point-min))
