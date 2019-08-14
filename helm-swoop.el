@@ -351,7 +351,7 @@
   (helm-swoop--unveil-invisible-overlay))
 
 (defun helm-swoop--validate-regexp (regexp)
-  (condition-case nil
+  (condition-case _err
       (progn
         (string-match-p regexp "")
         t)
