@@ -1306,12 +1306,8 @@ Last selected buffers will be applied to helm-multi-swoop.
 
 
 (defun helm-swoop--wrap-function-with-pre-input-function ($target-func $pre-input-func)
-  (let (($restore helm-swoop-pre-input-function))
-    (unwind-protect
-        (progn
-          (setq helm-swoop-pre-input-function $pre-input-func)
-          (funcall $target-func))
-      (setq helm-swoop-pre-input-function $restore))))
+  (let ((helm-swoop-pre-input-function $pre-input-func))
+    (funcall $target-func)))
 
 ;;;###autoload
 (defun helm-swoop-without-pre-input ()
