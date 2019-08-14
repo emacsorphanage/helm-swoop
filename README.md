@@ -169,7 +169,10 @@ i.e.
 
 [helm.el](https://github.com/emacs-helm/helm)
 
-
+### License
+> General Public License Version 3 (GPLv3)
+> Copyright (c) Emacsorphanage - https://github.com/emacsorphanage
+> https://www.gnu.org/licenses/gpl-3.0.html
 
 [melpa-link]: http://melpa.org/#/helm-swoop
 [melpa-stable-link]: http://stable.melpa.org/#/helm-swoop
