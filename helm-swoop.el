@@ -515,7 +515,7 @@ If $linum is number, lines are separated by $linum"
             (let (($i 1))
               (insert (format "%s " $i))
               (while (re-search-forward "\n" nil t)
-                (cl-incf $i)
+                (setq $i (1+ $i))
                 (if helm-swoop-use-line-number-face
                     (insert (propertize (format "%s" $i) 'font-lock-face 'helm-swoop-line-number-face) " ")
                   (insert (format "%s " $i))))
