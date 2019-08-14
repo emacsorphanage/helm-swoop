@@ -534,8 +534,7 @@ If $linum is number, lines are separated by $linum"
          (mapconcat 'identity
                     (split-string helm-pattern " ")
                     "\\|")))
-    (when (or (and (and (featurep 'migemo) helm-migemo-mode)
-                   (migemo-forward $regex nil t))
+    (when (or (and (featurep 'migemo) helm-migemo-mode (migemo-forward $regex nil t))
               (re-search-forward $regex nil t))
       (funcall helm-swoop-flash-region-function
                (match-beginning 0) (match-end 0))
