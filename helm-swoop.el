@@ -147,7 +147,7 @@
 (defvar helm-swoop-split-window-function
   (lambda ($buf &rest _$args)
     (if helm-swoop-split-with-multiple-windows
-	(funcall helm-swoop-split-direction)
+        (funcall helm-swoop-split-direction)
       (when (one-window-p)
         (funcall helm-swoop-split-direction)))
     (other-window 1)
@@ -196,7 +196,7 @@
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (dolist (action '(next-line previous-line next-page previous-page
-				beginning-of-buffer end-of-buffer toggle-visible-mark))
+                                beginning-of-buffer end-of-buffer toggle-visible-mark))
       (let ((orig-fn (intern (format "helm-%s" action)))
             (new-fn (intern (format "helm-swoop-%s" action))))
         (defalias new-fn `(lambda (&optional arg)
@@ -223,7 +223,7 @@
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (dolist (action '(next-line previous-line next-page previous-page
-				beginning-of-buffer end-of-buffer toggle-visible-mark))
+                                beginning-of-buffer end-of-buffer toggle-visible-mark))
       (let ((orig-fn (intern (format "helm-%s" action)))
             (new-fn (intern (format "helm-multi-swoop-%s" action))))
         (defalias new-fn `(lambda (&optional arg)
@@ -466,8 +466,8 @@ This function needs to call after latest helm-swoop-line-overlay set."
                            (string-to-number (match-string 0))
                            $list)))
             (setq $nearest-line (helm-swoop--nearest-line
-				 (cdr helm-swoop-last-line-info)
-				 $list))
+                                 (cdr helm-swoop-last-line-info)
+                                 $list))
             (goto-char $p)
             (re-search-forward (concat "^"
                                        (number-to-string $nearest-line)
@@ -900,7 +900,7 @@ If $linum is number, lines are separated by $linum"
             ;; Line number
             (add-text-properties $bol1 $eol1
                                  '(face font-lock-function-name-face
-					intangible t))
+                                        intangible t))
             ;; Editable area
             (remove-text-properties $bol2 $eol2 '(read-only t))
             ;; For line tail
@@ -1457,7 +1457,7 @@ Last selected buffers will be applied to helm-multi-swoop.
             ;; Line number
             (add-text-properties $bol1 $eol1
                                  '(face font-lock-function-name-face
-					intangible t))
+                                        intangible t))
             ;; Editable area
             (remove-text-properties $bol2 $eol2 '(read-only t))
             ;; (add-text-properties $bol2 $eol2 '(font-lock-face helm-match))
@@ -1518,7 +1518,7 @@ Last selected buffers will be applied to helm-multi-swoop.
                                      (1- (match-beginning 0))
                                    (goto-char (point-max))
                                    (re-search-backward "\n" nil t)))))
-			$contents))))
+                        $contents))))
         ;; Make ((buffer-name (number . line) (number . line) ...)
         ;;       (buffer-name (number . line) (number . line) ...) ...)
         (setq $pairs (cons (cons (nth $i $list) $contents) $pairs)))
