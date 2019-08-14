@@ -282,13 +282,11 @@
   (recenter (/ (window-height) 2)))
 
 (defsubst helm-swoop--delete-overlay ($identity &optional $beg $end)
-  (or $beg (setq $beg (point-min)))
-  (or $end (setq $end (point-max)))
-  (overlay-recenter $end)
+  (overlay-recenter (or $end (point-max)))
   (mapc (lambda ($o)
           (if (overlay-get $o $identity)
               (delete-overlay $o)))
-        (overlays-in $beg $end)))
+        (overlays-in (or $beg (point-min)) (or $end (point-max)))))
 
 (defsubst helm-swoop--get-string-at-line ()
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
@@ -353,7 +351,7 @@
   (helm-swoop--unveil-invisible-overlay))
 
 (defun helm-swoop--validate-regexp (regexp)
-  (condition-case nil
+  (condition-case _err
       (progn
         (string-match-p regexp "")
         t)
@@ -361,9 +359,9 @@
 
 (defun helm-swoop--target-word-overlay ($identity &optional $threshold)
   (interactive)
-  (or $threshold (setq $threshold 2))
   (save-excursion
     (let (($pat (split-string helm-pattern " "))
+          ($threshold (or $threshold 2))
           $o)
       (mapc (lambda ($wd)
               (when (and (helm-swoop--validate-regexp $wd) (< $threshold (length $wd)))
@@ -375,15 +373,12 @@
                 (if (string-match "^\\^\\[0\\-9\\]\\+\\.\\(.+\\)" $wd)
                     (setq $wd (concat "^" (match-string 1 $wd))))
                 (overlay-recenter (point-max))
-                (let (finish)
-                  (while (and (not finish) (re-search-forward $wd nil t))
-                    (if (= (match-beginning 0) (match-end 0))
-                        (forward-char 1)
-                      (setq $o (make-overlay (match-beginning 0) (match-end 0)))
-                      (overlay-put $o 'face 'helm-swoop-target-word-face)
-                      (overlay-put $o $identity t))
-                    (when (eobp)
-                      (setq finish t))))))
+                (while (and (not (eobp)) (re-search-forward $wd nil t))
+                  (if (= (match-beginning 0) (match-end 0))
+                      (forward-char 1)
+                    (setq $o (make-overlay (match-beginning 0) (match-end 0)))
+                    (overlay-put $o 'face 'helm-swoop-target-word-face)
+                    (overlay-put $o $identity t)))))
             $pat))))
 
 (defun helm-swoop--restore-unveiled-overlay ()
@@ -415,12 +410,11 @@ This function needs to call after latest helm-swoop-line-overlay set."
       ;; Synchronizing line position
       (when (and $key $num)
         (with-selected-window helm-swoop-synchronizing-window
-          (progn
-            (helm-swoop--goto-line $num)
-            (with-current-buffer helm-swoop-target-buffer
-              (delete-overlay helm-swoop-line-overlay)
-              (helm-swoop--target-line-overlay-move))
-            (helm-swoop--recenter)))
+          (helm-swoop--goto-line $num)
+          (with-current-buffer helm-swoop-target-buffer
+            (delete-overlay helm-swoop-line-overlay)
+            (helm-swoop--target-line-overlay-move))
+          (helm-swoop--recenter))
         (setq helm-swoop-last-line-info
               (cons helm-swoop-target-buffer $num))))))
 
@@ -513,15 +507,14 @@ If $linum is number, lines are separated by $linum"
   (let (($buf (get-buffer $buffer)))
     (when $buf
       (with-current-buffer $buf
-        (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max)))
-              $return)
+        (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max))))
           (with-temp-buffer
             (insert $bufstr)
             (goto-char (point-min))
             (let (($i 1))
               (insert (format "%s " $i))
               (while (re-search-forward "\n" nil t)
-                (cl-incf $i)
+                (setq $i (1+ $i))
                 (if helm-swoop-use-line-number-face
                     (insert (propertize (format "%s" $i) 'font-lock-face 'helm-swoop-line-number-face) " ")
                   (insert (format "%s " $i))))
@@ -530,8 +523,7 @@ If $linum is number, lines are separated by $linum"
                 (goto-char (point-min))
                 (while (re-search-forward "^[0-9]+\\s-*$" nil t)
                   (replace-match ""))))
-            (setq $return (helm-swoop--buffer-substring (point-min) (point-max))))
-          $return)))))
+            (helm-swoop--buffer-substring (point-min) (point-max))))))))
 
 (defun helm-swoop--goto-line-action ($line)
   (run-hooks 'helm-swoop-before-goto-line-action-hook)
@@ -542,8 +534,7 @@ If $linum is number, lines are separated by $linum"
          (mapconcat 'identity
                     (split-string helm-pattern " ")
                     "\\|")))
-    (when (or (and (and (featurep 'migemo) helm-migemo-mode)
-                   (migemo-forward $regex nil t))
+    (when (or (and (featurep 'migemo) helm-migemo-mode (migemo-forward $regex nil t))
               (re-search-forward $regex nil t))
       (funcall helm-swoop-flash-region-function
                (match-beginning 0) (match-end 0))
