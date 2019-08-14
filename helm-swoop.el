@@ -1,4 +1,4 @@
-;;; helm-swoop.el --- Efficiently hopping squeezed lines powered by helm interface -*- coding: utf-8; lexical-binding: t -*-
+;;; helm-swoop.el --- Efficiently hopping squeezed lines powered by helm interface -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2013 - 2018 by Shingo Fukuyama
 
