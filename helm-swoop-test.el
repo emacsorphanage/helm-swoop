@@ -20,5 +20,5 @@
 (load "cort-test")
 (require 'helm-swoop)
 
-(provide 'helm-swoop-test)
+;; (provide 'helm-swoop-test)
 ;;; helm-swoop-test.el ends here
