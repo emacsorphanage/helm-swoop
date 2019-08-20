@@ -552,9 +552,7 @@ If $linum is number, lines are separated by $linum"
                       (setq helm-swoop-list-cache
                             (helm-swoop--get-content helm-swoop-target-buffer t))
                       "\n" helm-swoop-last-prefix-number)))
-    (get-line . ,(if helm-swoop-speed-or-color
-                     'helm-swoop--buffer-substring
-                   'buffer-substring-no-properties))
+    (get-line . ,#'helm-swoop--buffer-substring)
     (keymap . ,helm-swoop-map)
     (header-line . ,(substitute-command-keys
                      "[\\<helm-swoop-map>\\[helm-swoop-edit]] Edit mode, \
