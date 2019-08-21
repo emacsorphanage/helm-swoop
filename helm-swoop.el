@@ -174,6 +174,15 @@
           (const :tag "Pulse highlight function" pulse-momentary-highlight-region)
           function))
 
+(defcustom helm-swoop-fontify-buffer-size-limit 100000
+  "If buffer size smaller than value, do fontify to make buffer highlighted.
+
+If value is symbol `always', always do fontify."
+  :group 'helm-swoop
+  :type '(choice
+          integer
+          (const :tag "Always Fontify" always)))
+
 (defvar helm-swoop-candidate-number-limit 19999)
 (defvar helm-swoop-buffer "*Helm Swoop*")
 (defvar helm-swoop-prompt "Swoop: ")
@@ -558,7 +567,8 @@ This function needs to call after latest helm-swoop-line-overlay set."
     (when (and helm-swoop-speed-or-color
                font-lock-mode
                fontify-safe?
-               (< (buffer-size) 100000))
+               (or (eq 'always helm-swoop-fontify-buffer-size-limit)
+                   (< (buffer-size) helm-swoop-fontify-buffer-size-limit)))
       (if (fboundp 'font-lock-ensure)
           (font-lock-ensure)
         (with-no-warnings (font-lock-fontify-buffer))))))
