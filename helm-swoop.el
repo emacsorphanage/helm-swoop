@@ -174,6 +174,15 @@
           (const :tag "Pulse highlight function" pulse-momentary-highlight-region)
           function))
 
+(defcustom helm-swoop-fontify-buffer-size-limit 100000
+  "If buffer size smaller than value, do fontify to make buffer highlighted.
+
+If value is symbol `always', always do fontify."
+  :group 'helm-swoop
+  :type '(choice
+          integer
+          (const :tag "Always Fontify" always)))
+
 (defvar helm-swoop-candidate-number-limit 19999)
 (defvar helm-swoop-buffer "*Helm Swoop*")
 (defvar helm-swoop-prompt "Swoop: ")
@@ -256,6 +265,58 @@
     helm-candidates-in-buffer-search-default-fn
     helm-mm-3-migemo-search))
 
+(defvar helm-swoop-font-lock-exclude
+  '(Man-mode
+    adoc-mode
+    bbdb-mode
+    bongo-library-mode
+    bongo-mode
+    bongo-playlist-mode
+    bookmark-bmenu-mode
+    circe-channel-mode
+    circe-query-mode
+    circe-server-mode
+    deadgrep-mode
+    debbugs-gnu-mode
+    dired-mode
+    elfeed-search-mode
+    elfeed-show-mode
+    emms-playlist-mode
+    emms-stream-mode
+    erc-mode
+    eshell-mode
+    eww-mode
+    forth-block-mode
+    forth-mode
+    fundamental-mode
+    gnus-article-mode
+    gnus-group-mode
+    gnus-summary-mode
+    help-mode
+    helpful-mode
+    jabber-chat-mode
+    magit-popup-mode
+    matrix-client-mode
+    matrix-client-room-list-mode
+    mu4e-headers-mode
+    mu4e-view-mode
+    nix-mode
+    notmuch-search-mode
+    notmuch-tree-mode
+    occur-edit-mode
+    occur-mode
+    org-agenda-mode
+    package-menu-mode
+    rcirc-mode
+    sauron-mode
+    treemacs-mode
+    twittering-mode
+    vc-dir-mode
+    w3m-mode
+    woman-mode
+    xref--xref-buffer-mode)
+  "List of major-modes that are incompatible with `font-lock-ensure'.")
+
 (defun helm-swoop-match-functions ()
   (if helm-swoop-use-fuzzy-match
       (append helm-c-source-swoop-match-functions '(helm-fuzzy-match))
@@ -291,15 +352,10 @@
 (defsubst helm-swoop--get-string-at-line ()
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
 
-(defsubst helm-swoop--buffer-substring ($point-min $point-max)
+(defun helm-swoop--buffer-substring ($point-min $point-max)
   (if helm-swoop-speed-or-color
       (let (($content (buffer-substring $point-min $point-max)))
-        (with-temp-buffer
-          (let ((inhibit-read-only t))
-            (insert $content)
-            (remove-text-properties (point-min) (point-max) '(read-only t))
-            (setq $content (buffer-substring (point-min) (point-max)))))
-        $content)
+        (propertize $content 'read-only nil))
     (buffer-substring-no-properties $point-min $point-max)))
 
 ;;;###autoload
@@ -501,12 +557,29 @@ This function needs to call after latest helm-swoop-line-overlay set."
 
 ;; core ------------------------------------------------
 
+(defun helm-swoop--maybe-fontify! ()
+  "Ensure the entired buffer is highlighted."
+  (let ((fontify-safe?
+         (not (or (derived-mode-p 'magit-mode)
+                  (bound-and-true-p magit-blame-mode)
+                  (memq major-mode helm-swoop-font-lock-exclude)
+                  (not (derived-mode-p 'prog-mode))))))
+    (when (and helm-swoop-speed-or-color
+               font-lock-mode
+               fontify-safe?
+               (or (eq 'always helm-swoop-fontify-buffer-size-limit)
+                   (< (buffer-size) helm-swoop-fontify-buffer-size-limit)))
+      (if (fboundp 'font-lock-ensure)
+          (font-lock-ensure)
+        (with-no-warnings (font-lock-fontify-buffer))))))
+
 (defun helm-swoop--get-content ($buffer &optional $linum)
   "Get the whole content in buffer and add line number at the head.
 If $linum is number, lines are separated by $linum"
   (let (($buf (get-buffer $buffer)))
     (when $buf
       (with-current-buffer $buf
+        (helm-swoop--maybe-fontify!)
         (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max))))
           (with-temp-buffer
             (insert $bufstr)
@@ -552,9 +625,7 @@ If $linum is number, lines are separated by $linum"
                       (setq helm-swoop-list-cache
                             (helm-swoop--get-content helm-swoop-target-buffer t))
                       "\n" helm-swoop-last-prefix-number)))
-    (get-line . ,(if helm-swoop-speed-or-color
-                     'helm-swoop--buffer-substring
-                   'buffer-substring-no-properties))
+    (get-line . ,#'helm-swoop--buffer-substring)
     (keymap . ,helm-swoop-map)
     (header-line . ,(substitute-command-keys
                      "[\\<helm-swoop-map>\\[helm-swoop-edit]] Edit mode, \
