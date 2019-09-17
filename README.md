@@ -163,6 +163,13 @@ i.e.
           (if (eq (length $pre-input) 0)
               helm-swoop-pattern ;; this variable keeps the last used words
             $pre-input))))
+
+;; If a symbol or phrase is selected, use it as the initial query.
+(setq helm-swoop-pre-input-function
+      (lambda ()
+        (if mark-active
+            (buffer-substring-no-properties (mark) (point))
+          "")))
 ```
 
 ### Require
