@@ -1056,48 +1056,6 @@ If $linum is number, lines are separated by $linum"
   #'projectile-buffers-with-file-or-process)
 ;; action -----------------------------------------------------
 
-(defadvice helm-next-line (around helm-multi-swoop-next-line disable)
-  (let ((helm-move-to-line-cycle-in-source nil))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-multi-swoop--move-line-action))))
-
-(defadvice helm-previous-line (around helm-multi-swoop-previous-line disable)
-  (let ((helm-move-to-line-cycle-in-source nil))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-multi-swoop--move-line-action))))
-
-(defadvice helm-toggle-visible-mark (around helm-multi-swoop-toggle-visible-mark disable)
-  (let ((helm-move-to-line-cycle-in-source nil))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-multi-swoop--move-line-action))))
-
-(defadvice helm-move--next-line-fn (around helm-multi-swoop-next-line-cycle disable)
-  (if (not (helm-pos-multiline-p))
-      (if (eq (point-max) (save-excursion (forward-line 1) (point)))
-          (when helm-swoop-move-to-line-cycle
-            (helm-beginning-of-buffer)
-            (helm-swoop--recenter))
-        (forward-line 1))
-    (let ((line-num (line-number-at-pos)))
-      (helm-move--next-multi-line-fn)
-      (when (and helm-swoop-move-to-line-cycle
-                 (eq line-num (line-number-at-pos)))
-        (helm-beginning-of-buffer)))))
-
-(defadvice helm-move--previous-line-fn (around helm-multi-swoop-previous-line-cycle disable)
-  (if (not (helm-pos-multiline-p))
-      (forward-line -1)
-    (helm-move--previous-multi-line-fn))
-  (when (and (helm-pos-header-line-p)
-             (eq (point) (save-excursion (forward-line -1) (point))))
-    (when helm-swoop-move-to-line-cycle
-      (helm-end-of-buffer))
-    (when (helm-pos-multiline-p)
-      (helm-move--previous-multi-line-fn))))
-
 (defun helm-multi-swoop--move-line-action ()
   (with-helm-window
     (let* (($key (buffer-substring (point-at-bol) (point-at-eol)))
