@@ -1,12 +1,13 @@
 ;;; helm-swoop.el --- Efficiently hopping squeezed lines powered by helm interface -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013 - 2018 by Shingo Fukuyama
+;; Copyright (C) 2019  Emacsorphanage Community
+;; Copyright (C) 2013-2018  Shingo Fukuyama
 
 ;; Version: 2.0.0
 ;; Author: Shingo Fukuyama - http://fukuyama.co
-;; URL: https://github.com/ShingoFukuyama/helm-swoop
+;; URL: https://github.com/emacsorphanage/helm-swoop
 ;; Created: Oct 24 2013
-;; Keywords: helm swoop inner buffer search
+;; Keywords: convenience, helm, swoop, inner, buffer, search
 ;; Package-Requires: ((helm "3.2") (emacs "24.4"))
 
 ;; This program is free software: you can redistribute it and/or modify
