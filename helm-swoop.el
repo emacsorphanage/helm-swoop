@@ -5,7 +5,7 @@
 
 ;; Version: 2.0.0
 ;; Author: Shingo Fukuyama - http://fukuyama.co
-;; URL: https://github.com/ShingoFukuyama/helm-swoop
+;; URL: https://github.com/emacsorphanage/helm-swoop
 ;; Created: Oct 24 2013
 ;; Keywords: helm swoop inner buffer search
 ;; Package-Requires: ((helm "3.2") (emacs "24.4"))
