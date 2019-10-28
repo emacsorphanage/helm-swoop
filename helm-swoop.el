@@ -1,6 +1,6 @@
 ;;; helm-swoop.el --- Efficiently hopping squeezed lines powered by helm interface -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013 - 2018 by Shingo Fukuyama
+;; Copyright (C) 2013-2018  Shingo Fukuyama
 
 ;; Version: 2.0.0
 ;; Author: Shingo Fukuyama - http://fukuyama.co
