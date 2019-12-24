@@ -1,4 +1,6 @@
-[![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
+[![melpa badge][melpa-badge]][melpa-link]
+[![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
+[![github actions badge][github-actions-badge]][github-actions-link]
 
 List match lines to another buffer, which is able to squeeze by any words you input. At the same time, the original buffer's cursor is jumping line to line according to moving up and down the line list.
 
@@ -176,12 +178,31 @@ i.e.
 
 [helm.el](https://github.com/emacs-helm/helm)
 
+### Contribution
+We welcome PR!
+
+#### Require tools for testing
+- cask
+  - install via brew
+      ```
+      brew install cask
+      ```
+
+  - manual install
+      ```
+      cd ~/
+      hub clone cask/cask
+      export PATH="$HOME/.cask/bin:$PATH"
+      ```
+
 ### License
 > General Public License Version 3 (GPLv3)
 > Copyright (c) Emacsorphanage - https://github.com/emacsorphanage
 > https://www.gnu.org/licenses/gpl-3.0.html
 
 [melpa-link]: http://melpa.org/#/helm-swoop
-[melpa-stable-link]: http://stable.melpa.org/#/helm-swoop
 [melpa-badge]: http://melpa.org/packages/helm-swoop-badge.svg
+[melpa-stable-link]: http://stable.melpa.org/#/helm-swoop
 [melpa-stable-badge]: http://stable.melpa.org/packages/helm-swoop-badge.svg
+[github-actions-link]: https://github.com/emacsorphanage/helm-swoop/actions
+[github-actions-badge]: https://github.com/emacsorphanage/helm-swoop/workflows/Main%20workflow/badge.svg

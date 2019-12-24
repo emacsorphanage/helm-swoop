@@ -1,0 +1,36 @@
+name: Main workflow
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs_version:
+          - '24.4'
+          - '24.5'
+          - '25.1'
+          - '25.2'
+          - '25.3'
+          - '26.1'
+          - '26.2'
+          - '26.3'
+          - 'snapshot'
+        include:
+          - emacs_version: 'snapshot'
+            allow_failure: true
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1.1.1
+    - uses: purcell/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs_version }}
+    - uses: conao3/setup-cask@master
+
+    - name: Run tests
+      if: matrix.allow_failure != true
+      run: 'make test'
+
+    - name: Run tests (allow failure)
+      if: matrix.allow_failure == true
+      run: 'make test || true'
