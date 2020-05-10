@@ -95,10 +95,10 @@
 (require 'helm-utils)
 (require 'helm-grep)
 
-(declare-function migemo-search-pattern-get "migemo")
-(declare-function migemo-forward "migemo")
-(declare-function projectile-buffers-with-file-or-process "projectile")
-(declare-function projectile-project-buffers "projectile")
+(declare-function migemo-search-pattern-get "ext:migemo")
+(declare-function migemo-forward "ext:migemo")
+(declare-function projectile-buffers-with-file-or-process "ext:projectile")
+(declare-function projectile-project-buffers "ext:projectile")
 (defvar projectile-buffers-filter-function)
 
 ;;; @ helm-swoop ----------------------------------------------
