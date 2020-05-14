@@ -680,6 +680,7 @@ If LINUM is number, lines are separated by LINUM."
               (> multiline 1))
          '(multiline))
     (match . ,(helm-swoop-match-functions))
+    (match-part . ,#'helm-swoop--match-part)
     ;; (search . ,(helm-swoop-search-functions))
     ))
 
