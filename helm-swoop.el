@@ -581,7 +581,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
 (defun helm-swoop--match-part (candidate)
   "Extract the proper part of CANDIDATE."
   (if (and helm-swoop-exclude-matching-linenums
-           (string-match "^[0-9]+?\s" candidate))
+           (string-match (rx bol (+? digit) " ") candidate))
       (replace-match "" 'nil 'nil candidate)
     candidate))
 
