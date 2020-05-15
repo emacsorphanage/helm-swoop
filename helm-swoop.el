@@ -184,11 +184,6 @@ If value is symbol `always', always do fontify."
           integer
           (const :tag "Always Fontify" always)))
 
-(defcustom helm-swoop-exclude-matching-linenums t
-  "If non-nil, exclude the linu numbers while mathcing the input pattern."
-  :group 'helm-swoop
-  :type 'boolean)
-
 (defvar helm-swoop-candidate-number-limit 19999)
 (defvar helm-swoop-buffer "*Helm Swoop*")
 (defvar helm-swoop-prompt "Swoop: ")
@@ -233,7 +228,6 @@ If value is symbol `always', always do fontify."
     (define-key map (kbd "C-c C-e") 'helm-swoop-edit)
     (define-key map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
     (define-key map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
-    (define-key map (kbd "^") 'helm-swoop-caret-match)
     map)
   "Keymap for helm-swoop.")
 
@@ -580,10 +574,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
 
 (defun helm-swoop--match-part (candidate)
   "Extract the proper part of CANDIDATE."
-  (if (and helm-swoop-exclude-matching-linenums
-           (string-match (rx bol (+? digit) " ") candidate))
-      (replace-match "" 'nil 'nil candidate)
-    candidate))
+  (replace-regexp-in-string (rx bol (+? digit) " ") "" candidate))
 
 (defun helm-swoop--maybe-fontify! ()
   "Ensure the entired buffer is highlighted."
@@ -870,43 +861,6 @@ If LINUM is number, lines are separated by LINUM."
         ;; Temporary apply second last buffer
         (let ((helm-last-buffer (cadr helm-buffers))) ad-do-it))
     ad-do-it))
-
-;; For caret beginning-match -----------------------------
-(defun helm-swoop--caret-match-delete (ov aft beg end &optional len)
-  "Caret match delete for OV, AFT in BEG to END and LEN."
-  (if aft
-      (- end beg len) ;; Unused argument? To avoid byte compile error
-    (delete-region (overlay-start ov) (1- (overlay-end ov)))))
-
-(defun helm-swoop-caret-match (&optional _resume)
-  "Caret match."
-  (interactive)
-  (let* ((prompt helm-swoop-prompt) ;; Accept change of the variable
-         (line-number-regexp "^[0-9]+.")
-         (prompt-regexp
-          (funcall `(lambda ()
-                      (rx bol ,prompt))))
-         (prompt-regexp-with-line-number
-          (funcall `(lambda ()
-                      (rx bol ,prompt (group ,line-number-regexp)))))
-         (disguise-caret
-          (lambda ()
-            (save-excursion
-              (re-search-backward prompt-regexp-with-line-number nil t)
-              (let ((ov (make-overlay (match-beginning 1) (match-end 1))))
-                (overlay-put ov 'face 'helm-swoop-target-word-face)
-                (overlay-put ov 'modification-hooks '(helm-swoop--caret-match-delete))
-                (overlay-put ov 'display "^")
-                (overlay-put ov 'evaporate t))))))
-    (if (and (minibufferp)
-             (string-match prompt-regexp
-                           (buffer-substring-no-properties
-                            (point-min) (point-max)))
-             (eq (point) (+ 1 (length helm-swoop-prompt))))
-        (progn
-          (insert line-number-regexp)
-          (funcall disguise-caret))
-      (insert "^"))))
 
 ;;; @ helm-swoop-edit -----------------------------------------
 
