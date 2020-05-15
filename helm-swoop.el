@@ -616,9 +616,11 @@ If LINUM is number, lines are separated by LINUM."
                   (replace-match ""))))
             (helm-swoop--buffer-substring (point-min) (point-max))))))))
 
-(defun helm-swoop--goto-line-action (line)
-  "Goto LINE action."
+(defun helm-swoop--goto-line-action (line &optional other-window)
+  "Goto LINE action.  If OTHER-WINDOW is non-nil, a new window will be open."
   (run-hooks 'helm-swoop-before-goto-line-action-hook)
+  (when other-window
+    (switch-to-buffer-other-window (current-buffer)))
   (helm-swoop--goto-line
    (when (string-match "^[0-9]+" line)
      (string-to-number (match-string 0 line))))
@@ -648,7 +650,8 @@ If LINUM is number, lines are separated by LINUM."
                      "[\\<helm-swoop-map>\\[helm-swoop-edit]] Edit mode, \
 [\\<helm-swoop-map>\\[helm-multi-swoop-all-from-helm-swoop]] apply all buffers"))
     (action . (("Go to Line" . helm-swoop--goto-line-action)
-               ("Edit" . helm-swoop--edit)))
+               ("Edit" . helm-swoop--edit)
+               ("Go to Line in Other Window" . (lambda (line) (helm-swoop--goto-line-action line t)))))
     ,(if (and helm-swoop-last-prefix-number
               (> helm-swoop-last-prefix-number 1))
          '(multiline))
