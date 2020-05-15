@@ -184,6 +184,11 @@ If value is symbol `always', always do fontify."
           integer
           (const :tag "Always Fontify" always)))
 
+(defcustom helm-swoop-exclude-matching-linenums t
+  "If non-nil, exclude the linu numbers while mathcing the input pattern."
+  :group 'helm-swoop
+  :type 'boolean)
+
 (defvar helm-swoop-candidate-number-limit 19999)
 (defvar helm-swoop-buffer "*Helm Swoop*")
 (defvar helm-swoop-prompt "Swoop: ")
@@ -573,6 +578,13 @@ This function needs to call after latest helm-swoop-line-overlay set."
 
 ;; core ------------------------------------------------
 
+(defun helm-swoop--match-part (candidate)
+  "Extract the proper part of CANDIDATE."
+  (if (and helm-swoop-exclude-matching-linenums
+           (string-match (rx bol (+? digit) " ") candidate))
+      (replace-match "" 'nil 'nil candidate)
+    candidate))
+
 (defun helm-swoop--maybe-fontify! ()
   "Ensure the entired buffer is highlighted."
   (let ((fontify-safe-p (not (or (derived-mode-p 'magit-mode)
@@ -650,6 +662,7 @@ If LINUM is number, lines are separated by LINUM."
               (> helm-swoop-last-prefix-number 1))
          '(multiline))
     (match . ,(helm-swoop-match-functions))
+    (match-part . ,#'helm-swoop--match-part)
     ;; (search . ,(helm-swoop-search-functions))
     ))
 
@@ -667,6 +680,7 @@ If LINUM is number, lines are separated by LINUM."
               (> multiline 1))
          '(multiline))
     (match . ,(helm-swoop-match-functions))
+    (match-part . ,#'helm-swoop--match-part)
     ;; (search . ,(helm-swoop-search-functions))
     ))
 
