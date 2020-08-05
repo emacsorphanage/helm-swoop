@@ -1078,7 +1078,7 @@ If LINUM is number, lines are separated by LINUM."
 (defun helm-multi-swoop--get-marked-buffers ()
   "Get marked buffers."
   (let ((buf (get-buffer helm-multi-swoop-buffer-list))
-        list)
+        lst)
     (when buf
       (with-current-buffer (get-buffer helm-multi-swoop-buffer-list)
         (mapc (lambda (ov)
@@ -1087,9 +1087,9 @@ If LINUM is number, lines are separated by LINUM."
                                (buffer-substring-no-properties
                                 (overlay-start ov) (overlay-end ov)))))
                     (unless (string-empty-p word)
-                      (push word list)))))
+                      (push word lst)))))
               (overlays-in (point-min) (point-max))))
-      list)))
+      lst)))
 
 ;; core --------------------------------------------------------
 
