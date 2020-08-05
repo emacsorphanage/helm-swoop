@@ -1079,8 +1079,8 @@ If LINUM is number, lines are separated by LINUM."
   "Get marked buffers."
   (let ((buf (get-buffer helm-multi-swoop-buffer-list))
         lst)
-    (when (buffer-live-p (get-buffer helm-multi-swoop-buffer-list))
-      (with-current-buffer (get-buffer helm-multi-swoop-buffer-list)
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
         (dolist (ov (overlays-in (point-min) (point-max)))
           (when (eq 'helm-visible-mark (overlay-get ov 'face))
             (let ((word (string-trim
