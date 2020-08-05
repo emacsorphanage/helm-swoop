@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019  Emacsorphanage Community
 ;; Copyright (C) 2013-2018  Shingo Fukuyama
 
-;; Version: 2.0.0
+;; Version: 2.1.0
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/emacsorphanage/helm-swoop
 ;; Created: Oct 24 2013
