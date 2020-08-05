@@ -1083,10 +1083,9 @@ If LINUM is number, lines are separated by LINUM."
       (with-current-buffer (get-buffer helm-multi-swoop-buffer-list)
         (mapc (lambda (ov)
                 (when (eq 'helm-visible-mark (overlay-get ov 'face))
-                  (push (let ((word (buffer-substring-no-properties
-                                     (overlay-start ov) (overlay-end ov))))
-                          (string-trim word))
-                        list)))
+                  (let ((word (buffer-substring-no-properties
+                               (overlay-start ov) (overlay-end ov))))
+                    (push (string-trim word) list))))
               (overlays-in (point-min) (point-max))))
       (delete "" list))))
 
