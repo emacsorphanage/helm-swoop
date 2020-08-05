@@ -1085,12 +1085,7 @@ If LINUM is number, lines are separated by LINUM."
                 (when (eq 'helm-visible-mark (overlay-get ov 'face))
                   (push (let ((word (buffer-substring-no-properties
                                      (overlay-start ov) (overlay-end ov))))
-                          (mapc (lambda (r)
-                                  (setq word (replace-regexp-in-string
-                                              (car r) (cdr r) word)))
-                                (list '("\\`[ \t\n\r]+" . "")
-                                      '("[ \t\n\r]+\\'" . "")))
-                          word)
+                          (string-trim word))
                         list)))
               (overlays-in (point-min) (point-max))))
       (delete "" list))))
