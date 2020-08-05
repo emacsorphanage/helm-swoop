@@ -1086,9 +1086,10 @@ If LINUM is number, lines are separated by LINUM."
                   (let ((word (string-trim
                                (buffer-substring-no-properties
                                 (overlay-start ov) (overlay-end ov)))))
-                    (push word list))))
+                    (unless (string-empty-p word)
+                      (push word list)))))
               (overlays-in (point-min) (point-max))))
-      (delete "" list))))
+      list)))
 
 ;; core --------------------------------------------------------
 
