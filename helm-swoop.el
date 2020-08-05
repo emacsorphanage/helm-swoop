@@ -1090,7 +1090,7 @@ If LINUM is number, lines are separated by LINUM."
                         (overlay-start ov) (overlay-end ov)))))
             (unless (string-empty-p word)
               (push word lst)))))
-      lst)))
+      (nreverse (sort lst #'string<)))))
 
 ;; core --------------------------------------------------------
 
