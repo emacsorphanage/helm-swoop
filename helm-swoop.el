@@ -809,7 +809,7 @@ If LINUM is number, lines are separated by LINUM."
       (isearch-exit))
     (helm-swoop :query query)))
 ;; When doing isearch, hand the word over to helm-swoop
-(define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+;; (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
 
 ;; Receive word from evil search ---------------
 (defun helm-swoop-from-evil-search ()
