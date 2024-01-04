@@ -357,7 +357,8 @@ If value is symbol `always', always do fontify."
 
 (defsubst helm-swoop--get-string-at-line ()
   "Get line string with no properties."
-  (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
+  (buffer-substring-no-properties (line-beginning-position)
+                                  (line-end-position)))
 
 (defun helm-swoop--buffer-substring (beg end)
   "Get buffer substring BEG to END."
@@ -405,10 +406,10 @@ If CANCEL is non-nil, store `helm-swoop-last-point'."
    (progn
      (search-backward
       "\n" nil t (% (line-number-at-pos) helm-swoop-last-prefix-number))
-     (goto-char (point-at-bol)))
+     (goto-char (line-beginning-position)))
    ;; For multiline highlight
    (save-excursion
-     (goto-char (point-at-bol))
+     (goto-char (line-beginning-position))
      (or (re-search-forward "\n" nil t helm-swoop-last-prefix-number)
          ;; For the end of buffer error
          (point-max)))
@@ -525,7 +526,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
       (save-excursion
         (goto-char p)
         (while (if p (setq p (re-search-forward (concat "^" buf "$") nil t)))
-          (when (get-text-property (point-at-bol) 'helm-header)
+          (when (get-text-property (line-beginning-position) 'helm-header)
             (forward-char 1)
             (setq bound (next-single-property-change (point) 'helm-header))
             (while (re-search-forward "^[0-9]+" bound t)
@@ -941,7 +942,7 @@ If LINUM is number, lines are separated by LINUM."
       (let ((inhibit-read-only t))
         ;; Title and explanation
         (goto-char (point-min))
-        (let ((ov (make-overlay (point) (point-at-eol))))
+        (let ((ov (make-overlay (point) (line-end-position))))
           (overlay-put ov 'helm-swoop-edit t)
           (overlay-put ov 'face 'font-lock-function-name-face)
           (overlay-put ov 'after-string
@@ -988,8 +989,9 @@ If LINUM is number, lines are separated by LINUM."
                 (let ((k (car cell))
                       (v (cdr cell)))
                   (goto-char (point-min))
-                  (delete-region (point-at-bol k) (point-at-eol k))
-                  (goto-char (point-at-bol k))
+                  (delete-region (line-beginning-position k)
+                                 (line-end-position k))
+                  (goto-char (line-beginning-position k))
                   (insert v)))
               lines)))
     (select-window helm-swoop-synchronizing-window)
@@ -1006,10 +1008,10 @@ If LINUM is number, lines are separated by LINUM."
         (mapc (lambda (cell)
                 (let ((k (car cell)))
                   (goto-char (point-min))
-                  (delete-region (point-at-bol k)
-                                 (if (eq (point-at-eol k) (point-max))
-                                     (point-at-eol k)
-                                   (1+ (point-at-eol k))))))
+                  (delete-region (line-beginning-position k)
+                                 (if (eq (line-end-position k) (point-max))
+                                     (line-end-position k)
+                                   (1+ (line-end-position k))))))
               lines)))
     (select-window helm-swoop-synchronizing-window)
     (kill-buffer (get-buffer helm-swoop-edit-buffer)))
@@ -1056,7 +1058,8 @@ If LINUM is number, lines are separated by LINUM."
 (defun helm-multi-swoop--move-line-action ()
   "Move line action."
   (with-helm-window
-    (let* ((key (buffer-substring (point-at-bol) (point-at-eol)))
+    (let* ((key (buffer-substring (line-beginning-position)
+                                  (line-end-position)))
            (num (when (string-match "^[0-9]+" key)
                   (string-to-number (match-string 0 key))))
            (source (helm-get-current-source))
@@ -1456,7 +1459,7 @@ Last selected buffers will be applied to helm-multi-swoop."
       (let ((inhibit-read-only t))
         ;; Title and explanation
         (goto-char (point-min))
-        (let ((ov (make-overlay (point) (point-at-eol))))
+        (let ((ov (make-overlay (point) (line-end-position))))
           (overlay-put ov 'helm-multi-swoop-edit t)
           (overlay-put ov 'face 'font-lock-function-name-face)
           (overlay-put ov 'after-string
@@ -1558,8 +1561,9 @@ Last selected buffers will be applied to helm-multi-swoop."
                           (let ((k (car cell))
                                 (v (cdr cell)))
                             (goto-char (point-min))
-                            (delete-region (point-at-bol k) (point-at-eol k))
-                            (goto-char (point-at-bol k))
+                            (delete-region (line-beginning-position k)
+                                           (line-end-position k))
+                            (goto-char (line-beginning-position k))
                             (insert v)))
                         (cdr elm))))
               (if helm-multi-swoop-edit-save
@@ -1585,10 +1589,11 @@ Last selected buffers will be applied to helm-multi-swoop."
                   (mapc (lambda (cell)
                           (let ((k (car cell)))
                             (goto-char (point-min))
-                            (delete-region (point-at-bol k)
-                                           (if (eq (point-at-eol k) (point-max))
-                                               (point-at-eol k)
-                                             (1+ (point-at-eol k))))))
+                            (delete-region (line-beginning-position k)
+                                           (if (eq (line-end-position k)
+                                                   (point-max))
+                                               (line-end-position k)
+                                             (1+ (line-end-position k))))))
                         (cdr elm))))
               (if helm-multi-swoop-edit-save
                   (if buffer-read-only
@@ -1632,7 +1637,8 @@ Last selected buffers will be applied to helm-multi-swoop."
           (goto-char po)
           (setq res (cons (format "%s %s"
                                   (line-number-at-pos po)
-                                  (buffer-substring (point-at-bol) (point-at-eol)))
+                                  (buffer-substring (line-beginning-position)
+                                                    (line-end-position)))
                           res))
           (let ((ov (make-overlay po (or (next-single-property-change po 'face)
                                          (point-max)))))
@@ -1656,7 +1662,7 @@ Last selected buffers will be applied to helm-multi-swoop."
                           (when (string-match "^[0-9]+" line)
                             (string-to-number (match-string 0 line))))
                          (let ((po (point))
-                               (poe (point-at-eol)))
+                               (poe (line-end-position)))
                            (while (<= (setq po (next-single-property-change po 'face)) poe)
                              (when (eq 'helm-swoop-target-word-face (helm-swoop--get-at-face po))
                                (goto-char po))))
@@ -1677,7 +1683,7 @@ Last selected buffers will be applied to helm-multi-swoop."
               (when (string-match "^[0-9]+" line)
                 (string-to-number (match-string 0 line))))
              (let ((po (point))
-                   (poe (point-at-eol)))
+                   (poe (line-end-position)))
                (while (<= (setq po (next-single-property-change po 'face)) poe)
                  (when (eq 'helm-swoop-target-word-face (helm-swoop--get-at-face po))
                    (goto-char po))))
